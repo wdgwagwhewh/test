@@ -133,13 +133,13 @@ function BaseNotificationSystem:Initialize()
                 end
             end
         end
-        if myPlot then
+        if myPlot and Settings.BaseUnlockWarning then
             local timeLabel = myPlot:FindFirstChild("RemainingTime", true)
             if timeLabel then
                 local t = tostring(timeLabel.Text)
                 local sec = tonumber(t:match("(%d+)") or "0")
                 if sec and sec <= 10 and sec > 0 then
-                    if not self.unlockWarned and Settings.BaseUnlockWarning then
+                    if not self.unlockWarned then
                         self:ShowNotification("your base unlocks in " .. sec .. "s!")
                         self.unlockWarned = true
                     end
@@ -1095,7 +1095,6 @@ G2L["settings_btn2_script"] = Instance.new("LocalScript", G2L["settings_btn2"]);
 G2L["settings_frame3"] = Instance.new("Frame", G2L["settings"]);
 G2L["settings_frame3"]["Size"] = UDim2.new(1, 0, 0, 30);
 G2L["settings_frame3"]["BackgroundTransparency"] = 1;
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextLabel
 G2L["settings_label3"] = Instance.new("TextLabel", G2L["settings_frame3"]);
 G2L["settings_label3"]["TextSize"] = 14;
 G2L["settings_label3"]["TextXAlignment"] = Enum.TextXAlignment.Left;
@@ -1104,19 +1103,30 @@ G2L["settings_label3"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
 G2L["settings_label3"]["BackgroundTransparency"] = 1;
 G2L["settings_label3"]["Size"] = UDim2.new(0.7, 0, 1, 0);
 G2L["settings_label3"]["Text"] = [[Unlock Warning]];
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton
 G2L["settings_btn3"] = Instance.new("TextButton", G2L["settings_frame3"]);
 G2L["settings_btn3"]["BackgroundColor3"] = Color3.fromRGB(71, 71, 81);
 G2L["settings_btn3"]["Size"] = UDim2.new(0, 50, 0, 25);
 G2L["settings_btn3"]["Text"] = [[]];
 G2L["settings_btn3"]["Position"] = UDim2.new(1, -50, 0, 0);
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.UICorner
 G2L["settings_btn3_corner"] = Instance.new("UICorner", G2L["settings_btn3"]);
 G2L["settings_btn3_corner"]["CornerRadius"] = UDim.new(0, 8);
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
 G2L["settings_btn3_script"] = Instance.new("LocalScript", G2L["settings_btn3"]);
 
-
+local function Settings_UnlockWarning()
+    local script = G2L["settings_btn3_script"];
+    local button = script.Parent
+    local isEnabled = Settings.BaseUnlockWarning
+    local function animateToggle(state)
+        button.BackgroundColor3 = state and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(71, 71, 81)
+    end
+    button.MouseButton1Click:Connect(function()
+        isEnabled = not isEnabled
+        Settings.BaseUnlockWarning = isEnabled
+        animateToggle(isEnabled)
+    end)
+    animateToggle(isEnabled)
+end;
+task.spawn(Settings_UnlockWarning)
 
 -- StarterGui.Lurk.Frame.LocalScript
 G2L["71"] = Instance.new("LocalScript", G2L["2"]);
