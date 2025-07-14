@@ -30,6 +30,14 @@ local PerformanceConfig = {
     MemoryLimit = 1000
 }
 
+local Settings = {
+    ESPColor = Color3.fromRGB(0, 170, 255),
+    BaseNotificationEnabled = false,
+    BaseNotificationRange = 50,
+    NotificationSound = true,
+    UITheme = "Dark"
+}
+
 local ConnectionManager = {
     connections = {},
     count = 0
@@ -56,6 +64,115 @@ function ConnectionManager:Cleanup()
     self.count = 0
 end
 
+local BaseNotificationSystem = {
+    enabled = false,
+    basePosition = Vector3.new(0, 0, 0),
+    lastNotification = 0,
+    notificationCooldown = 5
+}
+
+function BaseNotificationSystem:Initialize()
+    if not Settings.BaseNotificationEnabled then return end
+    
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    self.basePosition = rootPart.Position
+    self.enabled = true
+    
+    ConnectionManager:Add(RunService.Heartbeat:Connect(function()
+        if not self.enabled or not Settings.BaseNotificationEnabled then return end
+        
+        local currentTime = tick()
+        if currentTime - self.lastNotification < self.notificationCooldown then return end
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                local playerChar = player.Character
+                if playerChar then
+                    local playerRoot = playerChar:FindFirstChild("HumanoidRootPart")
+                    if playerRoot then
+                        local distance = (playerRoot.Position - self.basePosition).Magnitude
+                        if distance <= Settings.BaseNotificationRange then
+                            self:ShowNotification(player.Name .. " entered your base!")
+                            self.lastNotification = currentTime
+                            break
+                        end
+                    end
+                end
+            end
+        end
+    end))
+end
+
+function BaseNotificationSystem:ShowNotification(message)
+    local notificationGui = Instance.new("ScreenGui")
+    notificationGui.Name = "BaseNotification"
+    notificationGui.Parent = PlayerGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 60)
+    frame.Position = UDim2.new(1, -320, 0, 20)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    frame.BorderSizePixel = 0
+    frame.Parent = notificationGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 100, 100)
+    stroke.Thickness = 2
+    stroke.Parent = frame
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -20, 0, 20)
+    title.Position = UDim2.new(0, 10, 0, 5)
+    title.BackgroundTransparency = 1
+    title.Text = "BASE ALERT!"
+    title.TextColor3 = Color3.fromRGB(255, 100, 100)
+    title.TextSize = 16
+    title.Font = Enum.Font.GothamBold
+    title.Parent = frame
+    
+    local messageLabel = Instance.new("TextLabel")
+    messageLabel.Size = UDim2.new(1, -20, 0, 20)
+    messageLabel.Position = UDim2.new(0, 10, 0, 25)
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.Text = message
+    messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    messageLabel.TextSize = 14
+    messageLabel.Font = Enum.Font.Gotham
+    messageLabel.Parent = frame
+    
+    local tween = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -320, 0, 20)
+    })
+    tween:Play()
+    
+    task.delay(4, function()
+        local fadeOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 20, 0, 20)
+        })
+        fadeOut:Play()
+        fadeOut.Completed:Connect(function()
+            notificationGui:Destroy()
+        end)
+    end)
+    
+    if Settings.NotificationSound then
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
+        sound.Volume = 0.5
+        sound.Parent = frame
+        sound:Play()
+    end
+end
+
 -- StarterGui.Lurk
 G2L["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
 G2L["1"]["Name"] = [[Lurk]];
@@ -65,9 +182,9 @@ G2L["1"]["ResetOnSpawn"] = false;
 -- StarterGui.Lurk.Frame
 G2L["2"] = Instance.new("Frame", G2L["1"]);
 G2L["2"]["Active"] = true;
-G2L["2"]["BackgroundColor3"] = Color3.fromRGB(20, 20, 25);
+G2L["2"]["BackgroundColor3"] = Color3.fromRGB(18, 18, 28);
 G2L["2"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["2"]["Size"] = UDim2.new(0, 320, 0, 400);
+G2L["2"]["Size"] = UDim2.new(0, 350, 0, 450);
 G2L["2"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
 
 
@@ -85,8 +202,8 @@ G2L["4"]["Thickness"] = 2;
 -- StarterGui.Lurk.Frame.top
 G2L["5"] = Instance.new("Frame", G2L["2"]);
 G2L["5"]["BorderSizePixel"] = 0;
-G2L["5"]["BackgroundColor3"] = Color3.fromRGB(15, 15, 20);
-G2L["5"]["Size"] = UDim2.new(1, 0, 0, 40);
+G2L["5"]["BackgroundColor3"] = Color3.fromRGB(12, 12, 18);
+G2L["5"]["Size"] = UDim2.new(1, 0, 0, 45);
 G2L["5"]["Name"] = [[top]];
 
 
@@ -97,13 +214,13 @@ G2L["6"] = Instance.new("UICorner", G2L["5"]);
 
 -- StarterGui.Lurk.Frame.top.TextLabel
 G2L["7"] = Instance.new("TextLabel", G2L["5"]);
-G2L["7"]["TextSize"] = 18;
+G2L["7"]["TextSize"] = 20;
 G2L["7"]["TextXAlignment"] = Enum.TextXAlignment.Left;
 G2L["7"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["7"]["TextColor3"] = Color3.fromRGB(0, 170, 255);
+G2L["7"]["TextColor3"] = Color3.fromRGB(0, 200, 255);
 G2L["7"]["BackgroundTransparency"] = 1;
 G2L["7"]["Size"] = UDim2.new(1, -50, 1, 0);
-G2L["7"]["Text"] = [[LURK HACK v2.1]];
+G2L["7"]["Text"] = [[LURK HACK v2.2]];
 G2L["7"]["Position"] = UDim2.new(0, 15, 0, 0);
 
 
@@ -131,8 +248,8 @@ G2L["a"] = Instance.new("LocalScript", G2L["8"]);
 
 -- StarterGui.Lurk.Frame.tabs
 G2L["b"] = Instance.new("Frame", G2L["2"]);
-G2L["b"]["Size"] = UDim2.new(1, -20, 0, 35);
-G2L["b"]["Position"] = UDim2.new(0, 10, 0, 45);
+G2L["b"]["Size"] = UDim2.new(1, -20, 0, 40);
+G2L["b"]["Position"] = UDim2.new(0, 10, 0, 50);
 G2L["b"]["Name"] = [[tabs]];
 G2L["b"]["BackgroundTransparency"] = 1;
 
@@ -146,11 +263,11 @@ G2L["c"]["FillDirection"] = Enum.FillDirection.Horizontal;
 
 -- StarterGui.Lurk.Frame.tabs.mainbtn
 G2L["d"] = Instance.new("TextButton", G2L["b"]);
-G2L["d"]["TextSize"] = 15;
+G2L["d"]["TextSize"] = 14;
 G2L["d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
 G2L["d"]["BackgroundColor3"] = Color3.fromRGB(0, 170, 255);
 G2L["d"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["d"]["Size"] = UDim2.new(0.32, 0, 1, 0);
+G2L["d"]["Size"] = UDim2.new(0.24, 0, 1, 0);
 G2L["d"]["Text"] = [[Main]];
 G2L["d"]["Name"] = [[mainbtn]];
 
@@ -162,12 +279,12 @@ G2L["e"]["CornerRadius"] = UDim.new(0, 8);
 
 -- StarterGui.Lurk.Frame.tabs.visualbtn
 G2L["f"] = Instance.new("TextButton", G2L["b"]);
-G2L["f"]["TextSize"] = 15;
+G2L["f"]["TextSize"] = 14;
 G2L["f"]["TextColor3"] = Color3.fromRGB(200, 200, 200);
 G2L["f"]["SelectionOrder"] = 1;
 G2L["f"]["BackgroundColor3"] = Color3.fromRGB(35, 35, 45);
 G2L["f"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["f"]["Size"] = UDim2.new(0.32, 0, 1, 0);
+G2L["f"]["Size"] = UDim2.new(0.24, 0, 1, 0);
 G2L["f"]["Text"] = [[Visual]];
 G2L["f"]["Name"] = [[visualbtn]];
 
@@ -179,11 +296,11 @@ G2L["10"]["CornerRadius"] = UDim.new(0, 8);
 
 -- StarterGui.Lurk.Frame.tabs.miscbtn
 G2L["11"] = Instance.new("TextButton", G2L["b"]);
-G2L["11"]["TextSize"] = 15;
+G2L["11"]["TextSize"] = 14;
 G2L["11"]["TextColor3"] = Color3.fromRGB(200, 200, 200);
 G2L["11"]["BackgroundColor3"] = Color3.fromRGB(35, 35, 45);
 G2L["11"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["11"]["Size"] = UDim2.new(0.32, 0, 1, 0);
+G2L["11"]["Size"] = UDim2.new(0.24, 0, 1, 0);
 G2L["11"]["Text"] = [[Misc]];
 G2L["11"]["Name"] = [[miscbtn]];
 
@@ -192,14 +309,28 @@ G2L["11"]["Name"] = [[miscbtn]];
 G2L["12"] = Instance.new("UICorner", G2L["11"]);
 G2L["12"]["CornerRadius"] = UDim.new(0, 8);
 
+-- StarterGui.Lurk.Frame.tabs.settingsbtn
+G2L["settingsbtn"] = Instance.new("TextButton", G2L["b"]);
+G2L["settingsbtn"]["TextSize"] = 14;
+G2L["settingsbtn"]["TextColor3"] = Color3.fromRGB(200, 200, 200);
+G2L["settingsbtn"]["BackgroundColor3"] = Color3.fromRGB(35, 35, 45);
+G2L["settingsbtn"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+G2L["settingsbtn"]["Size"] = UDim2.new(0.24, 0, 1, 0);
+G2L["settingsbtn"]["Text"] = [[Settings]];
+G2L["settingsbtn"]["Name"] = [[settingsbtn]];
+
+-- StarterGui.Lurk.Frame.tabs.settingsbtn.UICorner
+G2L["settingsbtn_corner"] = Instance.new("UICorner", G2L["settingsbtn"]);
+G2L["settingsbtn_corner"]["CornerRadius"] = UDim.new(0, 8);
+
 
 -- StarterGui.Lurk.Frame.ScrollingFrame
 G2L["13"] = Instance.new("ScrollingFrame", G2L["2"]);
 G2L["13"]["BorderSizePixel"] = 0;
 G2L["13"]["CanvasSize"] = UDim2.new(0, 0, 0, 200);
-G2L["13"]["Size"] = UDim2.new(1, -20, 1, -95);
+G2L["13"]["Size"] = UDim2.new(1, -20, 1, -100);
 G2L["13"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 170, 255);
-G2L["13"]["Position"] = UDim2.new(0, 10, 0, 85);
+G2L["13"]["Position"] = UDim2.new(0, 10, 0, 95);
 G2L["13"]["ScrollBarThickness"] = 6;
 G2L["13"]["BackgroundTransparency"] = 1;
 
@@ -833,6 +964,85 @@ G2L["6f"]["CornerRadius"] = UDim.new(0, 6);
 
 -- StarterGui.Lurk.Frame.ScrollingFrame.misc.TextButton.LocalScript
 G2L["70"] = Instance.new("LocalScript", G2L["6e"]);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings
+G2L["settings"] = Instance.new("Frame", G2L["13"]);
+G2L["settings"]["AutomaticSize"] = Enum.AutomaticSize.Y;
+G2L["settings"]["Size"] = UDim2.new(1, 0, 0, 0);
+G2L["settings"]["Name"] = [[settings]];
+G2L["settings"]["BackgroundTransparency"] = 1;
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.UIListLayout
+G2L["settings_layout"] = Instance.new("UIListLayout", G2L["settings"]);
+G2L["settings_layout"]["Padding"] = UDim2.new(0, 8);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
+G2L["settings_frame1"] = Instance.new("Frame", G2L["settings"]);
+G2L["settings_frame1"]["Size"] = UDim2.new(1, 0, 0, 30);
+G2L["settings_frame1"]["BackgroundTransparency"] = 1;
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextLabel
+G2L["settings_label1"] = Instance.new("TextLabel", G2L["settings_frame1"]);
+G2L["settings_label1"]["TextSize"] = 14;
+G2L["settings_label1"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+G2L["settings_label1"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L["settings_label1"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
+G2L["settings_label1"]["BackgroundTransparency"] = 1;
+G2L["settings_label1"]["Size"] = UDim2.new(0.7, 0, 1, 0);
+G2L["settings_label1"]["Text"] = [[Base Notification]];
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton
+G2L["settings_btn1"] = Instance.new("TextButton", G2L["settings_frame1"]);
+G2L["settings_btn1"]["BackgroundColor3"] = Color3.fromRGB(71, 71, 81);
+G2L["settings_btn1"]["Size"] = UDim2.new(0, 50, 0, 25);
+G2L["settings_btn1"]["Text"] = [[]];
+G2L["settings_btn1"]["Position"] = UDim2.new(1, -50, 0, 0);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.UICorner
+G2L["settings_btn1_corner"] = Instance.new("UICorner", G2L["settings_btn1"]);
+G2L["settings_btn1_corner"]["CornerRadius"] = UDim.new(0, 12);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.Frame
+G2L["settings_btn1_frame"] = Instance.new("Frame", G2L["settings_btn1"]);
+G2L["settings_btn1_frame"]["BackgroundColor3"] = Color3.fromRGB(241, 241, 241);
+G2L["settings_btn1_frame"]["Size"] = UDim2.new(0, 21, 0, 21);
+G2L["settings_btn1_frame"]["Position"] = UDim2.new(0, 4, 0, 2);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.Frame.UICorner
+G2L["settings_btn1_frame_corner"] = Instance.new("UICorner", G2L["settings_btn1_frame"]);
+G2L["settings_btn1_frame_corner"]["CornerRadius"] = UDim.new(0.5, 0);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
+G2L["settings_btn1_script"] = Instance.new("LocalScript", G2L["settings_btn1"]);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
+G2L["settings_frame2"] = Instance.new("Frame", G2L["settings"]);
+G2L["settings_frame2"]["Size"] = UDim2.new(1, 0, 0, 30);
+G2L["settings_frame2"]["BackgroundTransparency"] = 1;
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextLabel
+G2L["settings_label2"] = Instance.new("TextLabel", G2L["settings_frame2"]);
+G2L["settings_label2"]["TextSize"] = 14;
+G2L["settings_label2"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+G2L["settings_label2"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L["settings_label2"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
+G2L["settings_label2"]["BackgroundTransparency"] = 1;
+G2L["settings_label2"]["Size"] = UDim2.new(0.7, 0, 1, 0);
+G2L["settings_label2"]["Text"] = [[ESP Color]];
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton
+G2L["settings_btn2"] = Instance.new("TextButton", G2L["settings_frame2"]);
+G2L["settings_btn2"]["BackgroundColor3"] = Color3.fromRGB(0, 170, 255);
+G2L["settings_btn2"]["Size"] = UDim2.new(0, 50, 0, 25);
+G2L["settings_btn2"]["Text"] = [[]];
+G2L["settings_btn2"]["Position"] = UDim2.new(1, -50, 0, 0);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.UICorner
+G2L["settings_btn2_corner"] = Instance.new("UICorner", G2L["settings_btn2"]);
+G2L["settings_btn2_corner"]["CornerRadius"] = UDim.new(0, 8);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
+G2L["settings_btn2_script"] = Instance.new("LocalScript", G2L["settings_btn2"]);
 
 
 
@@ -1670,9 +1880,9 @@ local script = G2L["1d"];
 	
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "ESP_Highlight"
-		highlight.FillColor = Color3.fromRGB(0, 120, 255)
+		highlight.FillColor = Settings.ESPColor
 		highlight.FillTransparency = 0.7
-		highlight.OutlineColor = Color3.fromRGB(0, 200, 255)
+		highlight.OutlineColor = Settings.ESPColor
 		highlight.OutlineTransparency = 0
 		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 		highlight.Parent = character
@@ -1781,7 +1991,7 @@ local script = G2L["24"];
 	
 	local ESP_NAME_SETTINGS = {
 		Font = Enum.Font.GothamBold,
-		Color = Color3.fromRGB(255, 255, 255),
+		Color = Settings.ESPColor,
 		Size = 18,
 		StrokeColor = Color3.fromRGB(0, 0, 0),
 		StrokeThickness = 2,
@@ -4591,6 +4801,137 @@ local function C_da()
 end;
 task.spawn(C_da);
 
+-- Settings Scripts
+local function Settings_BaseNotification()
+    local script = G2L["settings_btn1_script"];
+    local button = script.Parent
+    local sliderThumb = button:FindFirstChild("Frame")
+    local isEnabled = Settings.BaseNotificationEnabled
+    
+    local toggleAnim = {
+        On = {
+            Position = UDim2.new(0, 25, 0, 2),
+            Color = Color3.fromRGB(0, 170, 255)
+        },
+        Off = {
+            Position = UDim2.new(0, 4, 0, 2),
+            Color = Color3.fromRGB(70, 70, 80)
+        }
+    }
+    
+    local function animateToggle(state)
+        local target = state and toggleAnim.On or toggleAnim.Off
+        local thumbTween = TweenService:Create(sliderThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = target.Position})
+        local buttonTween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = target.Color})
+        thumbTween:Play()
+        buttonTween:Play()
+    end
+    
+    button.MouseButton1Click:Connect(function()
+        isEnabled = not isEnabled
+        Settings.BaseNotificationEnabled = isEnabled
+        animateToggle(isEnabled)
+        
+        if isEnabled then
+            BaseNotificationSystem:Initialize()
+        else
+            BaseNotificationSystem.enabled = false
+        end
+    end)
+    
+    animateToggle(isEnabled)
+end;
+
+local function Settings_ESPColor()
+    local script = G2L["settings_btn2_script"];
+    local button = script.Parent
+    
+    local colors = {
+        Color3.fromRGB(0, 170, 255),
+        Color3.fromRGB(255, 100, 100),
+        Color3.fromRGB(100, 255, 100),
+        Color3.fromRGB(255, 255, 100),
+        Color3.fromRGB(255, 100, 255),
+        Color3.fromRGB(100, 255, 255)
+    }
+    
+    local currentColorIndex = 1
+    
+    button.MouseButton1Click:Connect(function()
+        currentColorIndex = currentColorIndex + 1
+        if currentColorIndex > #colors then
+            currentColorIndex = 1
+        end
+        
+        Settings.ESPColor = colors[currentColorIndex]
+        button.BackgroundColor3 = colors[currentColorIndex]
+    end)
+    
+    button.BackgroundColor3 = Settings.ESPColor
+end;
+
+-- Enhanced Tab System
+local function EnhancedTabSystem()
+    local mainBtn = G2L["d"]
+    local visualBtn = G2L["f"]
+    local miscBtn = G2L["11"]
+    local settingsBtn = G2L["settingsbtn"]
+    
+    local mainContent = G2L["33"]
+    local visualContent = G2L["15"]
+    local miscContent = G2L["60"]
+    local settingsContent = G2L["settings"]
+    
+    local function showTab(content)
+        mainContent.Visible = false
+        visualContent.Visible = false
+        miscContent.Visible = false
+        settingsContent.Visible = false
+        content.Visible = true
+    end
+    
+    local function updateTabButtons(activeBtn)
+        local buttons = {mainBtn, visualBtn, miscBtn, settingsBtn}
+        local activeColor = Color3.fromRGB(0, 170, 255)
+        local inactiveColor = Color3.fromRGB(35, 35, 45)
+        local activeTextColor = Color3.fromRGB(255, 255, 255)
+        local inactiveTextColor = Color3.fromRGB(200, 200, 200)
+        
+        for _, btn in pairs(buttons) do
+            if btn == activeBtn then
+                btn.BackgroundColor3 = activeColor
+                btn.TextColor3 = activeTextColor
+            else
+                btn.BackgroundColor3 = inactiveColor
+                btn.TextColor3 = inactiveTextColor
+            end
+        end
+    end
+    
+    mainBtn.MouseButton1Click:Connect(function()
+        showTab(mainContent)
+        updateTabButtons(mainBtn)
+    end)
+    
+    visualBtn.MouseButton1Click:Connect(function()
+        showTab(visualContent)
+        updateTabButtons(visualBtn)
+    end)
+    
+    miscBtn.MouseButton1Click:Connect(function()
+        showTab(miscContent)
+        updateTabButtons(miscBtn)
+    end)
+    
+    settingsBtn.MouseButton1Click:Connect(function()
+        showTab(settingsContent)
+        updateTabButtons(settingsBtn)
+    end)
+    
+    showTab(mainContent)
+    updateTabButtons(mainBtn)
+end;
+
 local function initializeScript()
     task.wait(PerformanceConfig.LoadDelay)
     
@@ -4604,6 +4945,14 @@ local function initializeScript()
             ConnectionManager:Cleanup()
         end
     end))
+    
+    task.spawn(Settings_BaseNotification)
+    task.spawn(Settings_ESPColor)
+    task.spawn(EnhancedTabSystem)
+    
+    if Settings.BaseNotificationEnabled then
+        BaseNotificationSystem:Initialize()
+    end
 end
 
 task.spawn(initializeScript)
