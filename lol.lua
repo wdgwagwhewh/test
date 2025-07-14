@@ -2299,35 +2299,63 @@ local script = G2L["2b"];
 		if self.state.instances[plot.Name] then return self.state.instances[plot.Name] end
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "ESP_"..plot.Name
-		billboard.Size = self.settings.baseSize
-		billboard.StudsOffset = self.settings.offset
+		billboard.Size = UDim2.new(0, 220, 0, 60)
+		billboard.StudsOffset = Vector3.new(0, 6, 0)
 		billboard.AlwaysOnTop = true
 		billboard.Adornee = mainPart
 		billboard.MaxDistance = self.settings.maxDistance
 		billboard.Parent = mainPart
-	
+
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(1, 0, 1, 0)
-		frame.BackgroundTransparency = 0.85
-		frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		frame.BackgroundTransparency = 0.2
+		frame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 		frame.BorderSizePixel = 0
-	
+		frame.Parent = billboard
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = frame
+
 		local label = Instance.new("TextLabel")
 		label.Name = "Label"
-		label.Size = UDim2.new(1, -8, 1, -8)
-		label.Position = UDim2.new(0, 4, 0, 4)
+		label.Size = UDim2.new(1, -16, 0, 26)
+		label.Position = UDim2.new(0, 8, 0, 4)
 		label.BackgroundTransparency = 1
 		label.TextScaled = false
-		label.TextSize = 12
-		label.Font = Enum.Font.GothamMedium
-		label.TextStrokeTransparency = 0.4
+		label.TextSize = 18
+		label.Font = Enum.Font.GothamBold
+		label.TextStrokeTransparency = 0.2
 		label.TextStrokeColor3 = Color3.new(0, 0, 0)
+		label.TextColor3 = Color3.fromRGB(0, 200, 255)
 		label.Parent = frame
-	
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 5)
-		corner.Parent = frame
-		frame.Parent = billboard
+
+		local timeLabel = Instance.new("TextLabel")
+		timeLabel.Name = "TimeLabel"
+		timeLabel.Size = UDim2.new(1, -16, 0, 20)
+		timeLabel.Position = UDim2.new(0, 8, 0, 32)
+		timeLabel.BackgroundTransparency = 1
+		timeLabel.TextScaled = false
+		timeLabel.TextSize = 16
+		timeLabel.Font = Enum.Font.GothamMedium
+		timeLabel.TextStrokeTransparency = 0.3
+		timeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+		timeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		timeLabel.Parent = frame
+
+		local ownerStatus = Instance.new("TextLabel")
+		ownerStatus.Name = "OwnerStatus"
+		ownerStatus.Size = UDim2.new(1, -16, 0, 16)
+		ownerStatus.Position = UDim2.new(0, 8, 0, 52)
+		ownerStatus.BackgroundTransparency = 1
+		ownerStatus.TextScaled = false
+		ownerStatus.TextSize = 14
+		ownerStatus.Font = Enum.Font.Gotham
+		ownerStatus.TextStrokeTransparency = 0.5
+		ownerStatus.TextStrokeColor3 = Color3.new(0, 0, 0)
+		ownerStatus.TextColor3 = Color3.fromRGB(255, 255, 100)
+		ownerStatus.Parent = frame
+
 		self.state.instances[plot.Name] = billboard
 		return billboard
 	end
@@ -2362,42 +2390,76 @@ local script = G2L["2b"];
 	
 		for _, plot in plotsFolder:GetChildren() do
 			local mainPart = plot:FindFirstChild("Main", true) or plot:FindFirstChild("BasePart", true)
-			local timeLabel = plot:FindFirstChild("RemainingTime", true)
+			local timeLabelObj = plot:FindFirstChild("RemainingTime", true)
 			local ownerValue = plot:FindFirstChild("Owner", true)
-	
 			if mainPart then
 				local ownershipStatus = self:UpdateOwnership(plot)
 				local isMyPlot = plot.Name == self.state.myPlot
-	
+				local billboard = self:CreateESP(plot, mainPart)
+				local label = billboard.Frame.Label
+				local timeLabel = billboard.Frame.TimeLabel
+				local ownerStatus = billboard.Frame.OwnerStatus
 				if isMyPlot then
-					local billboard = self:CreateESP(plot, mainPart)
-					billboard.Frame.Label.Text = "MY BASE"
-					billboard.Frame.Label.TextColor3 = self.settings.colors.myPlot
+					label.Text = "MY BASE"
+					label.TextColor3 = self.settings.colors.myPlot
 				elseif ownershipStatus == "NEW OWNER" then
-					local billboard = self:CreateESP(plot, mainPart)
-					billboard.Frame.Label.Text = "CLAIMED"
-					billboard.Frame.Label.TextColor3 = self.settings.colors.newOwner
+					label.Text = "CLAIMED"
+					label.TextColor3 = self.settings.colors.newOwner
 				elseif ownerValue and (ownerValue.Value == nil or ownerValue.Value == "") then
-					local billboard = self:CreateESP(plot, mainPart)
-					billboard.Frame.Label.Text = "UNCLAIMED"
-					billboard.Frame.Label.TextColor3 = self.settings.colors.noOwner
-				elseif timeLabel then
-					local billboard = self:CreateESP(plot, mainPart)
-					local isUnlocked = (timeLabel.Text == "0s" or timeLabel.Text == "")
-					billboard.Frame.Label.Text = isUnlocked and "UNLOCKED" or ("LOCKED: "..timeLabel.Text)
-					billboard.Frame.Label.TextColor3 = isUnlocked and self.settings.colors.unlocked or self.settings.colors.locked
+					label.Text = "UNCLAIMED"
+					label.TextColor3 = self.settings.colors.noOwner
+				else
+					label.Text = "BASE"
+					label.TextColor3 = Color3.fromRGB(255,255,255)
 				end
-	
+				if timeLabelObj then
+					local t = tostring(timeLabelObj.Text)
+					local sec = tonumber(t:match("(%d+)") or "0")
+					if t == "" or t == "0s" or sec == 0 then
+						timeLabel.Text = "UNLOCKED"
+						timeLabel.TextColor3 = self.settings.colors.unlocked
+					else
+						timeLabel.Text = "LOCKED: " .. t
+						timeLabel.TextColor3 = self.settings.colors.locked
+					end
+				else
+					timeLabel.Text = "NO TIMER"
+					timeLabel.TextColor3 = Color3.fromRGB(200,200,200)
+				end
+				local ownerInBase = false
+				if ownerValue and ownerValue.Value and ownerValue.Value ~= "" then
+					local ownerName = tostring(ownerValue.Value)
+					for _, p in pairs(Players:GetPlayers()) do
+						if p.Name == ownerName or p.DisplayName == ownerName then
+							local char = p.Character
+							if char then
+								local root = char:FindFirstChild("HumanoidRootPart")
+								if root and mainPart then
+									local dist = (root.Position - mainPart.Position).Magnitude
+									if dist <= Settings.BaseNotificationRange then
+										ownerInBase = true
+										break
+									end
+								end
+							end
+						end
+					end
+					if ownerInBase then
+						ownerStatus.Text = "OWNER IN BASE"
+						ownerStatus.TextColor3 = Color3.fromRGB(100,255,100)
+					else
+						ownerStatus.Text = "OWNER NOT IN BASE"
+						ownerStatus.TextColor3 = Color3.fromRGB(255,100,100)
+					end
+				else
+					ownerStatus.Text = "NO OWNER"
+					ownerStatus.TextColor3 = Color3.fromRGB(255,255,100)
+				end
 				local camera = workspace.CurrentCamera
 				if camera then
 					local distance = (camera.CFrame.Position - mainPart.Position).Magnitude
 					local scale = math.clamp(1.3 - (distance/self.settings.maxDistance), 0.7, 1.2)
-					if self.state.instances[plot.Name] then
-						self.state.instances[plot.Name].Size = UDim2.new(
-							0, self.settings.baseSize.X.Offset * scale, 
-							0, self.settings.baseSize.Y.Offset * scale
-						)
-					end
+					billboard.Size = UDim2.new(0, self.settings.baseSize.X.Offset * scale + 70, 0, self.settings.baseSize.Y.Offset * scale + 30)
 				end
 			elseif self.state.instances[plot.Name] then
 				self.state.instances[plot.Name]:Destroy()
