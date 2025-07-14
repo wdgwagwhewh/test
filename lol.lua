@@ -1,5 +1,5 @@
 --[=[
- ██╗     ██╗   ██╗██████╗ ██╗  ██╗    ██╗  ██╗ █████╗  ██████╗██╗  ██╗
+ ██╗     ██╗   ██╗██████╗ ██╗  ██╗    ██║  ██║ █████╗  ██████╗██╗  ██╗
  ██║     ██║   ██║██╔══██╗██║ ██╔╝    ██║  ██║██╔══██╗██╔════╝██║ ██╔╝
  ██║     ██║   ██║██████╔╝█████╔╝     ███████║███████║██║     █████╔╝ 
  ██║     ██║   ██║██╔══██╗██╔═██╗     ██╔══██║██╔══██║██║     ██╔═██╗ 
@@ -974,7 +974,7 @@ G2L["settings"]["BackgroundTransparency"] = 1;
 
 -- StarterGui.Lurk.Frame.ScrollingFrame.settings.UIListLayout
 G2L["settings_layout"] = Instance.new("UIListLayout", G2L["settings"]);
-G2L["settings_layout"]["Padding"] = UDim2.new(0, 8);
+G2L["settings_layout"]["Padding"] = UDim.new(0, 8);
 
 -- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
 G2L["settings_frame1"] = Instance.new("Frame", G2L["settings"]);
