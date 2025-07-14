@@ -68,27 +68,25 @@ local BaseNotificationSystem = {
     enabled = false,
     basePosition = Vector3.new(0, 0, 0),
     lastNotification = 0,
-    notificationCooldown = 5
+    notificationCooldown = 5,
+    playersInBase = {},
+    unlockWarned = false
 }
 
 function BaseNotificationSystem:Initialize()
     if not Settings.BaseNotificationEnabled then return end
-    
     local character = LocalPlayer.Character
     if not character then return end
-    
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return end
-    
     self.basePosition = rootPart.Position
     self.enabled = true
-    
+    self.playersInBase = {}
+    self.unlockWarned = false
     ConnectionManager:Add(RunService.Heartbeat:Connect(function()
         if not self.enabled or not Settings.BaseNotificationEnabled then return end
-        
         local currentTime = tick()
-        if currentTime - self.lastNotification < self.notificationCooldown then return end
-        
+        local playersNow = {}
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer then
                 local playerChar = player.Character
@@ -97,13 +95,61 @@ function BaseNotificationSystem:Initialize()
                     if playerRoot then
                         local distance = (playerRoot.Position - self.basePosition).Magnitude
                         if distance <= Settings.BaseNotificationRange then
-                            self:ShowNotification(player.Name .. " entered your base!")
-                            self.lastNotification = currentTime
-                            break
+                            playersNow[player] = true
+                            if not self.playersInBase[player] then
+                                self:ShowNotification(player.Name .. " entered your base!")
+                                self.lastNotification = currentTime
+                            end
                         end
                     end
                 end
             end
+        end
+        for p in pairs(self.playersInBase) do
+            if not playersNow[p] then
+                self.playersInBase[p] = nil
+            end
+        end
+        for p in pairs(playersNow) do
+            self.playersInBase[p] = true
+        end
+        local myPlot = nil
+        local plotsFolder = nil
+        local possibleNames = {"Plots", "PlotSystem", "PlotsSystem", "Bases"}
+        for _, name in ipairs(possibleNames) do
+            local folder = workspace:FindFirstChild(name)
+            if folder then
+                plotsFolder = folder
+                break
+            end
+        end
+        if plotsFolder then
+            for _, plot in pairs(plotsFolder:GetChildren()) do
+                local yourBase = plot:FindFirstChild("YourBase", true)
+                if yourBase and yourBase:IsA("BoolValue") and yourBase.Value then
+                    myPlot = plot
+                    break
+                end
+            end
+        end
+        if myPlot then
+            local timeLabel = myPlot:FindFirstChild("RemainingTime", true)
+            if timeLabel then
+                local t = tostring(timeLabel.Text)
+                local sec = tonumber(t:match("(%d+)") or "0")
+                if sec and sec <= 10 and sec > 0 then
+                    if not self.unlockWarned then
+                        self:ShowNotification("your base unlocks in " .. sec .. "s!")
+                        self.unlockWarned = true
+                    end
+                elseif sec and sec > 10 then
+                    self.unlockWarned = false
+                end
+            else
+                self.unlockWarned = false
+            end
+        else
+            self.unlockWarned = false
         end
     end))
 end
