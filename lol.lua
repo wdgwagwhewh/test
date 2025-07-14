@@ -2325,8 +2325,8 @@ local script = G2L["2b"];
 		if self.state.instances[plot.Name] then return self.state.instances[plot.Name] end
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "ESP_"..plot.Name
-		billboard.Size = UDim2.new(0, 220, 0, 60)
-		billboard.StudsOffset = Vector3.new(0, 6, 0)
+		billboard.Size = UDim2.new(0, 120, 0, 36)
+		billboard.StudsOffset = Vector3.new(0, 4, 0)
 		billboard.AlwaysOnTop = true
 		billboard.Adornee = mainPart
 		billboard.MaxDistance = self.settings.maxDistance
@@ -2334,52 +2334,52 @@ local script = G2L["2b"];
 
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(1, 0, 1, 0)
-		frame.BackgroundTransparency = 0.2
+		frame.BackgroundTransparency = 0.35
 		frame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 		frame.BorderSizePixel = 0
 		frame.Parent = billboard
 
 		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 10)
+		corner.CornerRadius = UDim.new(0, 6)
 		corner.Parent = frame
 
 		local label = Instance.new("TextLabel")
 		label.Name = "Label"
-		label.Size = UDim2.new(1, -16, 0, 26)
-		label.Position = UDim2.new(0, 8, 0, 4)
+		label.Size = UDim2.new(1, -8, 0, 16)
+		label.Position = UDim2.new(0, 4, 0, 2)
 		label.BackgroundTransparency = 1
 		label.TextScaled = false
-		label.TextSize = 18
+		label.TextSize = 13
 		label.Font = Enum.Font.GothamBold
-		label.TextStrokeTransparency = 0.2
+		label.TextStrokeTransparency = 0.3
 		label.TextStrokeColor3 = Color3.new(0, 0, 0)
 		label.TextColor3 = Color3.fromRGB(0, 200, 255)
 		label.Parent = frame
 
 		local timeLabel = Instance.new("TextLabel")
 		timeLabel.Name = "TimeLabel"
-		timeLabel.Size = UDim2.new(1, -16, 0, 20)
-		timeLabel.Position = UDim2.new(0, 8, 0, 32)
+		timeLabel.Size = UDim2.new(1, -8, 0, 12)
+		timeLabel.Position = UDim2.new(0, 4, 0, 18)
 		timeLabel.BackgroundTransparency = 1
 		timeLabel.TextScaled = false
-		timeLabel.TextSize = 16
+		timeLabel.TextSize = 11
 		timeLabel.Font = Enum.Font.GothamMedium
-		timeLabel.TextStrokeTransparency = 0.3
+		timeLabel.TextStrokeTransparency = 0.5
 		timeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-		timeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		timeLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
 		timeLabel.Parent = frame
 
 		local ownerStatus = Instance.new("TextLabel")
 		ownerStatus.Name = "OwnerStatus"
-		ownerStatus.Size = UDim2.new(1, -16, 0, 16)
-		ownerStatus.Position = UDim2.new(0, 8, 0, 52)
+		ownerStatus.Size = UDim2.new(1, -8, 0, 10)
+		ownerStatus.Position = UDim2.new(0, 4, 0, 30)
 		ownerStatus.BackgroundTransparency = 1
 		ownerStatus.TextScaled = false
-		ownerStatus.TextSize = 14
+		ownerStatus.TextSize = 9
 		ownerStatus.Font = Enum.Font.Gotham
-		ownerStatus.TextStrokeTransparency = 0.5
+		ownerStatus.TextStrokeTransparency = 0.7
 		ownerStatus.TextStrokeColor3 = Color3.new(0, 0, 0)
-		ownerStatus.TextColor3 = Color3.fromRGB(255, 255, 100)
+		ownerStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
 		ownerStatus.Parent = frame
 
 		self.state.instances[plot.Name] = billboard
@@ -2479,13 +2479,13 @@ local script = G2L["2b"];
 					end
 				else
 					ownerStatus.Text = "NO OWNER"
-					ownerStatus.TextColor3 = Color3.fromRGB(255,255,100)
+					ownerStatus.TextColor3 = Color3.fromRGB(200,200,200)
 				end
 				local camera = workspace.CurrentCamera
 				if camera then
 					local distance = (camera.CFrame.Position - mainPart.Position).Magnitude
-					local scale = math.clamp(1.3 - (distance/self.settings.maxDistance), 0.7, 1.2)
-					billboard.Size = UDim2.new(0, self.settings.baseSize.X.Offset * scale + 70, 0, self.settings.baseSize.Y.Offset * scale + 30)
+					local scale = math.clamp(1.1 - (distance/self.settings.maxDistance), 0.5, 1)
+					billboard.Size = UDim2.new(0, 120 * scale, 0, 36 * scale)
 				end
 			elseif self.state.instances[plot.Name] then
 				self.state.instances[plot.Name]:Destroy()
