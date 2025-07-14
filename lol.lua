@@ -35,7 +35,8 @@ local Settings = {
     BaseNotificationEnabled = false,
     BaseNotificationRange = 50,
     NotificationSound = true,
-    UITheme = "Dark"
+    UITheme = "Dark",
+    BaseUnlockWarning = true
 }
 
 local ConnectionManager = {
@@ -138,7 +139,7 @@ function BaseNotificationSystem:Initialize()
                 local t = tostring(timeLabel.Text)
                 local sec = tonumber(t:match("(%d+)") or "0")
                 if sec and sec <= 10 and sec > 0 then
-                    if not self.unlockWarned then
+                    if not self.unlockWarned and Settings.BaseUnlockWarning then
                         self:ShowNotification("your base unlocks in " .. sec .. "s!")
                         self.unlockWarned = true
                     end
@@ -1089,6 +1090,31 @@ G2L["settings_btn2_corner"]["CornerRadius"] = UDim.new(0, 8);
 
 -- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
 G2L["settings_btn2_script"] = Instance.new("LocalScript", G2L["settings_btn2"]);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
+G2L["settings_frame3"] = Instance.new("Frame", G2L["settings"]);
+G2L["settings_frame3"]["Size"] = UDim2.new(1, 0, 0, 30);
+G2L["settings_frame3"]["BackgroundTransparency"] = 1;
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextLabel
+G2L["settings_label3"] = Instance.new("TextLabel", G2L["settings_frame3"]);
+G2L["settings_label3"]["TextSize"] = 14;
+G2L["settings_label3"]["TextXAlignment"] = Enum.TextXAlignment.Left;
+G2L["settings_label3"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L["settings_label3"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
+G2L["settings_label3"]["BackgroundTransparency"] = 1;
+G2L["settings_label3"]["Size"] = UDim2.new(0.7, 0, 1, 0);
+G2L["settings_label3"]["Text"] = [[Unlock Warning]];
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton
+G2L["settings_btn3"] = Instance.new("TextButton", G2L["settings_frame3"]);
+G2L["settings_btn3"]["BackgroundColor3"] = Color3.fromRGB(71, 71, 81);
+G2L["settings_btn3"]["Size"] = UDim2.new(0, 50, 0, 25);
+G2L["settings_btn3"]["Text"] = [[]];
+G2L["settings_btn3"]["Position"] = UDim2.new(1, -50, 0, 0);
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.UICorner
+G2L["settings_btn3_corner"] = Instance.new("UICorner", G2L["settings_btn3"]);
+G2L["settings_btn3_corner"]["CornerRadius"] = UDim.new(0, 8);
+-- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
+G2L["settings_btn3_script"] = Instance.new("LocalScript", G2L["settings_btn3"]);
 
 
 
