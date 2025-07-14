@@ -1092,25 +1092,25 @@ G2L["settings_btn2_corner"]["CornerRadius"] = UDim.new(0, 8);
 G2L["settings_btn2_script"] = Instance.new("LocalScript", G2L["settings_btn2"]);
 
 -- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
-G2L["settings_frame3"] = Instance.new("Frame", G2L["settings"]);
-G2L["settings_frame3"]["Size"] = UDim2.new(1, 0, 0, 30);
-G2L["settings_frame3"]["BackgroundTransparency"] = 1;
-G2L["settings_label3"] = Instance.new("TextLabel", G2L["settings_frame3"]);
-G2L["settings_label3"]["TextSize"] = 14;
-G2L["settings_label3"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["settings_label3"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["settings_label3"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
-G2L["settings_label3"]["BackgroundTransparency"] = 1;
-G2L["settings_label3"]["Size"] = UDim2.new(0.7, 0, 1, 0);
-G2L["settings_label3"]["Text"] = [[Unlock Warning]];
-G2L["settings_btn3"] = Instance.new("TextButton", G2L["settings_frame3"]);
-G2L["settings_btn3"]["BackgroundColor3"] = Color3.fromRGB(71, 71, 81);
-G2L["settings_btn3"]["Size"] = UDim2.new(0, 50, 0, 25);
-G2L["settings_btn3"]["Text"] = [[]];
-G2L["settings_btn3"]["Position"] = UDim2.new(1, -50, 0, 0);
-G2L["settings_btn3_corner"] = Instance.new("UICorner", G2L["settings_btn3"]);
-G2L["settings_btn3_corner"]["CornerRadius"] = UDim.new(0, 8);
-G2L["settings_btn3_script"] = Instance.new("LocalScript", G2L["settings_btn3"]);
+G2L["settings_frame3"] = Instance.new("Frame", G2L["settings"])
+G2L["settings_frame3"].Size = UDim2.new(1, 0, 0, 30)
+G2L["settings_frame3"].BackgroundTransparency = 1
+G2L["settings_label3"] = Instance.new("TextLabel", G2L["settings_frame3"])
+G2L["settings_label3"].TextSize = 14
+G2L["settings_label3"].TextXAlignment = Enum.TextXAlignment.Left
+G2L["settings_label3"].FontFace = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+G2L["settings_label3"].TextColor3 = Color3.fromRGB(241, 241, 241)
+G2L["settings_label3"].BackgroundTransparency = 1
+G2L["settings_label3"].Size = UDim2.new(0.7, 0, 1, 0)
+G2L["settings_label3"].Text = [[Unlock Warning]]
+G2L["settings_btn3"] = Instance.new("TextButton", G2L["settings_frame3"])
+G2L["settings_btn3"].BackgroundColor3 = Color3.fromRGB(71, 71, 81)
+G2L["settings_btn3"].Size = UDim2.new(0, 50, 0, 25)
+G2L["settings_btn3"].Text = ""
+G2L["settings_btn3"].Position = UDim2.new(1, -50, 0, 0)
+G2L["settings_btn3_corner"] = Instance.new("UICorner", G2L["settings_btn3"])
+G2L["settings_btn3_corner"].CornerRadius = UDim.new(0, 8)
+G2L["settings_btn3_script"] = Instance.new("LocalScript", G2L["settings_btn3"])
 
 local function Settings_UnlockWarning()
     local script = G2L["settings_btn3_script"];
@@ -2491,12 +2491,8 @@ local script = G2L["2b"];
 					ownerStatus.Text = "NO OWNER"
 					ownerStatus.TextColor3 = Color3.fromRGB(200,200,200)
 				end
-				local camera = workspace.CurrentCamera
-				if camera then
-					local distance = (camera.CFrame.Position - mainPart.Position).Magnitude
-					local scale = math.clamp(1.1 - (distance/self.settings.maxDistance), 0.5, 1)
-					billboard.Size = UDim2.new(0, 120 * scale, 0, 36 * scale)
-				end
+				-- always same size, no scaling
+				billboard.Size = UDim2.new(0, 120, 0, 36)
 			elseif self.state.instances[plot.Name] then
 				self.state.instances[plot.Name]:Destroy()
 				self.state.instances[plot.Name] = nil
