@@ -695,6 +695,27 @@ G2L["5f"]["Text"] = [[Steal Helper]];
 G2L["5f"]["Position"] = UDim2.new(0, 0, 0.06667, 0);
 
 
+-- StarterGui.Lurk.Frame.ScrollingFrame.main.DiscordButton
+G2L["main_discord"] = Instance.new("TextButton", G2L["33"]);
+G2L["main_discord"]["TextSize"] = 14;
+G2L["main_discord"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+G2L["main_discord"]["BackgroundColor3"] = Color3.fromRGB(114, 137, 218);
+G2L["main_discord"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+G2L["main_discord"]["Size"] = UDim2.new(1, 0, 0, 35);
+G2L["main_discord"]["Text"] = [[Discord]];
+G2L["main_discord"]["Name"] = [[DiscordButton]];
+
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.main.DiscordButton.UICorner
+G2L["main_discord_corner"] = Instance.new("UICorner", G2L["main_discord"]);
+G2L["main_discord_corner"]["CornerRadius"] = UDim.new(0, 6);
+
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.main.DiscordButton.LocalScript
+G2L["main_discord_script"] = Instance.new("LocalScript", G2L["main_discord"]);
+
+
+
 -- StarterGui.Lurk.Frame.ScrollingFrame.misc
 G2L["60"] = Instance.new("Frame", G2L["13"]);
 G2L["60"]["Visible"] = false;
@@ -4582,5 +4603,21 @@ local function C_discord()
 	end)
 end;
 task.spawn(C_discord);
+
+-- StarterGui.Lurk.Frame.ScrollingFrame.main.DiscordButton.LocalScript
+local function C_main_discord()
+	local script = G2L["main_discord_script"];
+	local button = script.Parent
+	
+	button.MouseButton1Click:Connect(function()
+		setclipboard("https://discord.gg/293k8FSeUJOP")
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Discord",
+			Text = "Discord invite copied to clipboard!",
+			Duration = 3
+		})
+	end)
+end;
+task.spawn(C_main_discord);
 
 return G2L["1"], require;
