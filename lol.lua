@@ -1,5 +1,5 @@
 --[=[
- ██╗     ██╗   ██╗██████╗ ██╗  ██╗    ██║  ██║ █████╗  ██████╗██╗  ██╗
+ ██╗     ██╗   ██╗██████╗ ██╗  ██╗    ██╗  ██╗ █████╗  ██████╗██╗  ██╗
  ██║     ██║   ██║██╔══██╗██║ ██╔╝    ██║  ██║██╔══██╗██╔════╝██║ ██╔╝
  ██║     ██║   ██║██████╔╝█████╔╝     ███████║███████║██║     █████╔╝ 
  ██║     ██║   ██║██╔══██╗██╔═██╗     ██╔══██║██╔══██║██║     ██╔═██╗ 
@@ -7,218 +7,10 @@
  ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 ]=]
 
--- Enhanced LURK HACK v2.1
--- Ultra Optimized for Zero Lag Performance
+-- Enhanced LURK HACK v2.0
+-- Optimized for Performance & Visual Appeal
 -- Instances: 218 | Scripts: 37 | Modules: 0 | Tags: 0
-
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
 local G2L = {};
-
-local PerformanceConfig = {
-    LoadDelay = 0.1,
-    BatchSize = 5,
-    MaxConnections = 50,
-    UpdateInterval = 0.1,
-    MemoryLimit = 1000
-}
-
-local Settings = {
-    ESPColor = Color3.fromRGB(0, 170, 255),
-    BaseNotificationEnabled = false,
-    BaseNotificationRange = 50,
-    NotificationSound = true,
-    UITheme = "Dark",
-    BaseUnlockWarning = true
-}
-
-local ConnectionManager = {
-    connections = {},
-    count = 0
-}
-
-function ConnectionManager:Add(connection)
-    if self.count >= PerformanceConfig.MaxConnections then
-        self.connections[1]:Disconnect()
-        table.remove(self.connections, 1)
-        self.count = self.count - 1
-    end
-    
-    table.insert(self.connections, connection)
-    self.count = self.count + 1
-end
-
-function ConnectionManager:Cleanup()
-    for _, connection in pairs(self.connections) do
-        if connection then
-            connection:Disconnect()
-        end
-    end
-    self.connections = {}
-    self.count = 0
-end
-
-local BaseNotificationSystem = {
-    enabled = false,
-    basePosition = Vector3.new(0, 0, 0),
-    lastNotification = 0,
-    notificationCooldown = 5,
-    playersInBase = {},
-    unlockWarned = false
-}
-
-function BaseNotificationSystem:Initialize()
-    if not Settings.BaseNotificationEnabled then return end
-    local character = LocalPlayer.Character
-    if not character then return end
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return end
-    self.basePosition = rootPart.Position
-    self.enabled = true
-    self.playersInBase = {}
-    self.unlockWarned = false
-    ConnectionManager:Add(RunService.Heartbeat:Connect(function()
-        if not self.enabled or not Settings.BaseNotificationEnabled then return end
-        local currentTime = tick()
-        local playersNow = {}
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                local playerChar = player.Character
-                if playerChar then
-                    local playerRoot = playerChar:FindFirstChild("HumanoidRootPart")
-                    if playerRoot then
-                        local distance = (playerRoot.Position - self.basePosition).Magnitude
-                        if distance <= Settings.BaseNotificationRange then
-                            playersNow[player] = true
-                            if not self.playersInBase[player] then
-                                self:ShowNotification(player.Name .. " entered your base!")
-                                self.lastNotification = currentTime
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        for p in pairs(self.playersInBase) do
-            if not playersNow[p] then
-                self.playersInBase[p] = nil
-            end
-        end
-        for p in pairs(playersNow) do
-            self.playersInBase[p] = true
-        end
-        local myPlot = nil
-        local plotsFolder = nil
-        local possibleNames = {"Plots", "PlotSystem", "PlotsSystem", "Bases"}
-        for _, name in ipairs(possibleNames) do
-            local folder = workspace:FindFirstChild(name)
-            if folder then
-                plotsFolder = folder
-                break
-            end
-        end
-        if plotsFolder then
-            for _, plot in pairs(plotsFolder:GetChildren()) do
-                local yourBase = plot:FindFirstChild("YourBase", true)
-                if yourBase and yourBase:IsA("BoolValue") and yourBase.Value then
-                    myPlot = plot
-                    break
-                end
-            end
-        end
-        if myPlot and Settings.BaseUnlockWarning then
-            local timeLabel = myPlot:FindFirstChild("RemainingTime", true)
-            if timeLabel then
-                local t = tostring(timeLabel.Text)
-                local sec = tonumber(t:match("(%d+)") or "0")
-                if sec and sec <= 10 and sec > 0 then
-                    if not self.unlockWarned then
-                        self:ShowNotification("your base unlocks in " .. sec .. "s!")
-                        self.unlockWarned = true
-                    end
-                elseif sec and sec > 10 then
-                    self.unlockWarned = false
-                end
-            else
-                self.unlockWarned = false
-            end
-        else
-            self.unlockWarned = false
-        end
-    end))
-end
-
-function BaseNotificationSystem:ShowNotification(message)
-    local notificationGui = Instance.new("ScreenGui")
-    notificationGui.Name = "BaseNotification"
-    notificationGui.Parent = PlayerGui
-    
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 300, 0, 60)
-    frame.Position = UDim2.new(1, -320, 0, 20)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    frame.BorderSizePixel = 0
-    frame.Parent = notificationGui
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = frame
-    
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(255, 100, 100)
-    stroke.Thickness = 2
-    stroke.Parent = frame
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -20, 0, 20)
-    title.Position = UDim2.new(0, 10, 0, 5)
-    title.BackgroundTransparency = 1
-    title.Text = "BASE ALERT!"
-    title.TextColor3 = Color3.fromRGB(255, 100, 100)
-    title.TextSize = 16
-    title.Font = Enum.Font.GothamBold
-    title.Parent = frame
-    
-    local messageLabel = Instance.new("TextLabel")
-    messageLabel.Size = UDim2.new(1, -20, 0, 20)
-    messageLabel.Position = UDim2.new(0, 10, 0, 25)
-    messageLabel.BackgroundTransparency = 1
-    messageLabel.Text = message
-    messageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    messageLabel.TextSize = 14
-    messageLabel.Font = Enum.Font.Gotham
-    messageLabel.Parent = frame
-    
-    local tween = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -320, 0, 20)
-    })
-    tween:Play()
-    
-    task.delay(4, function()
-        local fadeOut = TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Position = UDim2.new(1, 20, 0, 20)
-        })
-        fadeOut:Play()
-        fadeOut.Completed:Connect(function()
-            notificationGui:Destroy()
-        end)
-    end)
-    
-    if Settings.NotificationSound then
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
-        sound.Volume = 0.5
-        sound.Parent = frame
-        sound:Play()
-    end
-end
 
 -- StarterGui.Lurk
 G2L["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
@@ -229,9 +21,9 @@ G2L["1"]["ResetOnSpawn"] = false;
 -- StarterGui.Lurk.Frame
 G2L["2"] = Instance.new("Frame", G2L["1"]);
 G2L["2"]["Active"] = true;
-G2L["2"]["BackgroundColor3"] = Color3.fromRGB(18, 18, 28);
+G2L["2"]["BackgroundColor3"] = Color3.fromRGB(20, 20, 25);
 G2L["2"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["2"]["Size"] = UDim2.new(0, 350, 0, 450);
+G2L["2"]["Size"] = UDim2.new(0, 320, 0, 400);
 G2L["2"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
 
 
@@ -249,8 +41,8 @@ G2L["4"]["Thickness"] = 2;
 -- StarterGui.Lurk.Frame.top
 G2L["5"] = Instance.new("Frame", G2L["2"]);
 G2L["5"]["BorderSizePixel"] = 0;
-G2L["5"]["BackgroundColor3"] = Color3.fromRGB(12, 12, 18);
-G2L["5"]["Size"] = UDim2.new(1, 0, 0, 45);
+G2L["5"]["BackgroundColor3"] = Color3.fromRGB(15, 15, 20);
+G2L["5"]["Size"] = UDim2.new(1, 0, 0, 40);
 G2L["5"]["Name"] = [[top]];
 
 
@@ -261,13 +53,13 @@ G2L["6"] = Instance.new("UICorner", G2L["5"]);
 
 -- StarterGui.Lurk.Frame.top.TextLabel
 G2L["7"] = Instance.new("TextLabel", G2L["5"]);
-G2L["7"]["TextSize"] = 20;
+G2L["7"]["TextSize"] = 18;
 G2L["7"]["TextXAlignment"] = Enum.TextXAlignment.Left;
 G2L["7"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["7"]["TextColor3"] = Color3.fromRGB(0, 200, 255);
+G2L["7"]["TextColor3"] = Color3.fromRGB(0, 170, 255);
 G2L["7"]["BackgroundTransparency"] = 1;
 G2L["7"]["Size"] = UDim2.new(1, -50, 1, 0);
-G2L["7"]["Text"] = [[LURK HACK v2.2]];
+G2L["7"]["Text"] = [[LURK HACK v2.0]];
 G2L["7"]["Position"] = UDim2.new(0, 15, 0, 0);
 
 
@@ -295,8 +87,8 @@ G2L["a"] = Instance.new("LocalScript", G2L["8"]);
 
 -- StarterGui.Lurk.Frame.tabs
 G2L["b"] = Instance.new("Frame", G2L["2"]);
-G2L["b"]["Size"] = UDim2.new(1, -20, 0, 40);
-G2L["b"]["Position"] = UDim2.new(0, 10, 0, 50);
+G2L["b"]["Size"] = UDim2.new(1, -20, 0, 35);
+G2L["b"]["Position"] = UDim2.new(0, 10, 0, 45);
 G2L["b"]["Name"] = [[tabs]];
 G2L["b"]["BackgroundTransparency"] = 1;
 
@@ -310,11 +102,11 @@ G2L["c"]["FillDirection"] = Enum.FillDirection.Horizontal;
 
 -- StarterGui.Lurk.Frame.tabs.mainbtn
 G2L["d"] = Instance.new("TextButton", G2L["b"]);
-G2L["d"]["TextSize"] = 14;
+G2L["d"]["TextSize"] = 15;
 G2L["d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
 G2L["d"]["BackgroundColor3"] = Color3.fromRGB(0, 170, 255);
 G2L["d"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["d"]["Size"] = UDim2.new(0.24, 0, 1, 0);
+G2L["d"]["Size"] = UDim2.new(0.32, 0, 1, 0);
 G2L["d"]["Text"] = [[Main]];
 G2L["d"]["Name"] = [[mainbtn]];
 
@@ -326,12 +118,12 @@ G2L["e"]["CornerRadius"] = UDim.new(0, 8);
 
 -- StarterGui.Lurk.Frame.tabs.visualbtn
 G2L["f"] = Instance.new("TextButton", G2L["b"]);
-G2L["f"]["TextSize"] = 14;
+G2L["f"]["TextSize"] = 15;
 G2L["f"]["TextColor3"] = Color3.fromRGB(200, 200, 200);
 G2L["f"]["SelectionOrder"] = 1;
 G2L["f"]["BackgroundColor3"] = Color3.fromRGB(35, 35, 45);
 G2L["f"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["f"]["Size"] = UDim2.new(0.24, 0, 1, 0);
+G2L["f"]["Size"] = UDim2.new(0.32, 0, 1, 0);
 G2L["f"]["Text"] = [[Visual]];
 G2L["f"]["Name"] = [[visualbtn]];
 
@@ -343,11 +135,11 @@ G2L["10"]["CornerRadius"] = UDim.new(0, 8);
 
 -- StarterGui.Lurk.Frame.tabs.miscbtn
 G2L["11"] = Instance.new("TextButton", G2L["b"]);
-G2L["11"]["TextSize"] = 14;
+G2L["11"]["TextSize"] = 15;
 G2L["11"]["TextColor3"] = Color3.fromRGB(200, 200, 200);
 G2L["11"]["BackgroundColor3"] = Color3.fromRGB(35, 35, 45);
 G2L["11"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["11"]["Size"] = UDim2.new(0.24, 0, 1, 0);
+G2L["11"]["Size"] = UDim2.new(0.32, 0, 1, 0);
 G2L["11"]["Text"] = [[Misc]];
 G2L["11"]["Name"] = [[miscbtn]];
 
@@ -356,28 +148,14 @@ G2L["11"]["Name"] = [[miscbtn]];
 G2L["12"] = Instance.new("UICorner", G2L["11"]);
 G2L["12"]["CornerRadius"] = UDim.new(0, 8);
 
--- StarterGui.Lurk.Frame.tabs.settingsbtn
-G2L["settingsbtn"] = Instance.new("TextButton", G2L["b"]);
-G2L["settingsbtn"]["TextSize"] = 14;
-G2L["settingsbtn"]["TextColor3"] = Color3.fromRGB(200, 200, 200);
-G2L["settingsbtn"]["BackgroundColor3"] = Color3.fromRGB(35, 35, 45);
-G2L["settingsbtn"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["settingsbtn"]["Size"] = UDim2.new(0.24, 0, 1, 0);
-G2L["settingsbtn"]["Text"] = [[Settings]];
-G2L["settingsbtn"]["Name"] = [[settingsbtn]];
-
--- StarterGui.Lurk.Frame.tabs.settingsbtn.UICorner
-G2L["settingsbtn_corner"] = Instance.new("UICorner", G2L["settingsbtn"]);
-G2L["settingsbtn_corner"]["CornerRadius"] = UDim.new(0, 8);
-
 
 -- StarterGui.Lurk.Frame.ScrollingFrame
 G2L["13"] = Instance.new("ScrollingFrame", G2L["2"]);
 G2L["13"]["BorderSizePixel"] = 0;
 G2L["13"]["CanvasSize"] = UDim2.new(0, 0, 0, 200);
-G2L["13"]["Size"] = UDim2.new(1, -20, 1, -100);
+G2L["13"]["Size"] = UDim2.new(1, -20, 1, -95);
 G2L["13"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 170, 255);
-G2L["13"]["Position"] = UDim2.new(0, 10, 0, 95);
+G2L["13"]["Position"] = UDim2.new(0, 10, 0, 85);
 G2L["13"]["ScrollBarThickness"] = 6;
 G2L["13"]["BackgroundTransparency"] = 1;
 
@@ -1012,121 +790,7 @@ G2L["6f"]["CornerRadius"] = UDim.new(0, 6);
 -- StarterGui.Lurk.Frame.ScrollingFrame.misc.TextButton.LocalScript
 G2L["70"] = Instance.new("LocalScript", G2L["6e"]);
 
--- StarterGui.Lurk.Frame.ScrollingFrame.settings
-G2L["settings"] = Instance.new("Frame", G2L["13"]);
-G2L["settings"]["AutomaticSize"] = Enum.AutomaticSize.Y;
-G2L["settings"]["Size"] = UDim2.new(1, 0, 0, 0);
-G2L["settings"]["Name"] = [[settings]];
-G2L["settings"]["BackgroundTransparency"] = 1;
 
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.UIListLayout
-G2L["settings_layout"] = Instance.new("UIListLayout", G2L["settings"]);
-G2L["settings_layout"]["Padding"] = UDim.new(0, 8);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
-G2L["settings_frame1"] = Instance.new("Frame", G2L["settings"]);
-G2L["settings_frame1"]["Size"] = UDim2.new(1, 0, 0, 30);
-G2L["settings_frame1"]["BackgroundTransparency"] = 1;
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextLabel
-G2L["settings_label1"] = Instance.new("TextLabel", G2L["settings_frame1"]);
-G2L["settings_label1"]["TextSize"] = 14;
-G2L["settings_label1"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["settings_label1"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["settings_label1"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
-G2L["settings_label1"]["BackgroundTransparency"] = 1;
-G2L["settings_label1"]["Size"] = UDim2.new(0.7, 0, 1, 0);
-G2L["settings_label1"]["Text"] = [[Base Notification]];
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton
-G2L["settings_btn1"] = Instance.new("TextButton", G2L["settings_frame1"]);
-G2L["settings_btn1"]["BackgroundColor3"] = Color3.fromRGB(71, 71, 81);
-G2L["settings_btn1"]["Size"] = UDim2.new(0, 50, 0, 25);
-G2L["settings_btn1"]["Text"] = [[]];
-G2L["settings_btn1"]["Position"] = UDim2.new(1, -50, 0, 0);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.UICorner
-G2L["settings_btn1_corner"] = Instance.new("UICorner", G2L["settings_btn1"]);
-G2L["settings_btn1_corner"]["CornerRadius"] = UDim.new(0, 12);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.Frame
-G2L["settings_btn1_frame"] = Instance.new("Frame", G2L["settings_btn1"]);
-G2L["settings_btn1_frame"]["BackgroundColor3"] = Color3.fromRGB(241, 241, 241);
-G2L["settings_btn1_frame"]["Size"] = UDim2.new(0, 21, 0, 21);
-G2L["settings_btn1_frame"]["Position"] = UDim2.new(0, 4, 0, 2);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.Frame.UICorner
-G2L["settings_btn1_frame_corner"] = Instance.new("UICorner", G2L["settings_btn1_frame"]);
-G2L["settings_btn1_frame_corner"]["CornerRadius"] = UDim.new(0.5, 0);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
-G2L["settings_btn1_script"] = Instance.new("LocalScript", G2L["settings_btn1"]);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
-G2L["settings_frame2"] = Instance.new("Frame", G2L["settings"]);
-G2L["settings_frame2"]["Size"] = UDim2.new(1, 0, 0, 30);
-G2L["settings_frame2"]["BackgroundTransparency"] = 1;
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextLabel
-G2L["settings_label2"] = Instance.new("TextLabel", G2L["settings_frame2"]);
-G2L["settings_label2"]["TextSize"] = 14;
-G2L["settings_label2"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["settings_label2"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["settings_label2"]["TextColor3"] = Color3.fromRGB(241, 241, 241);
-G2L["settings_label2"]["BackgroundTransparency"] = 1;
-G2L["settings_label2"]["Size"] = UDim2.new(0.7, 0, 1, 0);
-G2L["settings_label2"]["Text"] = [[ESP Color]];
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton
-G2L["settings_btn2"] = Instance.new("TextButton", G2L["settings_frame2"]);
-G2L["settings_btn2"]["BackgroundColor3"] = Color3.fromRGB(0, 170, 255);
-G2L["settings_btn2"]["Size"] = UDim2.new(0, 50, 0, 25);
-G2L["settings_btn2"]["Text"] = [[]];
-G2L["settings_btn2"]["Position"] = UDim2.new(1, -50, 0, 0);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.UICorner
-G2L["settings_btn2_corner"] = Instance.new("UICorner", G2L["settings_btn2"]);
-G2L["settings_btn2_corner"]["CornerRadius"] = UDim.new(0, 8);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame.TextButton.LocalScript
-G2L["settings_btn2_script"] = Instance.new("LocalScript", G2L["settings_btn2"]);
-
--- StarterGui.Lurk.Frame.ScrollingFrame.settings.Frame
-G2L["settings_frame3"] = Instance.new("Frame", G2L["settings"])
-G2L["settings_frame3"].Size = UDim2.new(1, 0, 0, 30)
-G2L["settings_frame3"].BackgroundTransparency = 1
-G2L["settings_label3"] = Instance.new("TextLabel", G2L["settings_frame3"])
-G2L["settings_label3"].TextSize = 14
-G2L["settings_label3"].TextXAlignment = Enum.TextXAlignment.Left
-G2L["settings_label3"].FontFace = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-G2L["settings_label3"].TextColor3 = Color3.fromRGB(241, 241, 241)
-G2L["settings_label3"].BackgroundTransparency = 1
-G2L["settings_label3"].Size = UDim2.new(0.7, 0, 1, 0)
-G2L["settings_label3"].Text = [[Unlock Warning]]
-G2L["settings_btn3"] = Instance.new("TextButton", G2L["settings_frame3"])
-G2L["settings_btn3"].BackgroundColor3 = Color3.fromRGB(71, 71, 81)
-G2L["settings_btn3"].Size = UDim2.new(0, 50, 0, 25)
-G2L["settings_btn3"].Text = ""
-G2L["settings_btn3"].Position = UDim2.new(1, -50, 0, 0)
-G2L["settings_btn3_corner"] = Instance.new("UICorner", G2L["settings_btn3"])
-G2L["settings_btn3_corner"].CornerRadius = UDim.new(0, 8)
-G2L["settings_btn3_script"] = Instance.new("LocalScript", G2L["settings_btn3"])
-
-local function Settings_UnlockWarning()
-    local script = G2L["settings_btn3_script"];
-    local button = script.Parent
-    local isEnabled = Settings.BaseUnlockWarning
-    local function animateToggle(state)
-        button.BackgroundColor3 = state and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(71, 71, 81)
-    end
-    button.MouseButton1Click:Connect(function()
-        isEnabled = not isEnabled
-        Settings.BaseUnlockWarning = isEnabled
-        animateToggle(isEnabled)
-    end)
-    animateToggle(isEnabled)
-end;
-task.spawn(Settings_UnlockWarning)
 
 -- StarterGui.Lurk.Frame.LocalScript
 G2L["71"] = Instance.new("LocalScript", G2L["2"]);
@@ -1933,10 +1597,12 @@ local script = G2L["1d"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
+	local tweenService = game:GetService("TweenService")
+	local Players = game:GetService("Players")
+	local RunService = game:GetService("RunService")
 	local localPlayer = Players.LocalPlayer
 	local highlights = {}
-	local updateQueue = {}
-	local lastUpdate = 0
+	local connections = {}
 	
 	local toggleAnim = {
 		On = {
@@ -1951,20 +1617,21 @@ local script = G2L["1d"];
 	
 	local function animateToggle(state)
 		local target = state and toggleAnim.On or toggleAnim.Off
-		local thumbTween = TweenService:Create(sliderThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = target.Position})
-		local buttonTween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = target.Color})
+		local thumbTween = tweenService:Create(sliderThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = target.Position})
+		local buttonTween = tweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = target.Color})
 		thumbTween:Play()
 		buttonTween:Play()
 	end
 	
 	local function applyHighlight(character)
-		if not character or character:FindFirstChild("ESP_Highlight") then return end
+		if not character then return end
+		if character:FindFirstChild("ESP_Highlight") then return end
 	
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "ESP_Highlight"
-		highlight.FillColor = Settings.ESPColor
+		highlight.FillColor = Color3.fromRGB(0, 120, 255)
 		highlight.FillTransparency = 0.7
-		highlight.OutlineColor = Settings.ESPColor
+		highlight.OutlineColor = Color3.fromRGB(0, 200, 255)
 		highlight.OutlineTransparency = 0
 		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 		highlight.Parent = character
@@ -1981,58 +1648,49 @@ local script = G2L["1d"];
 		highlights = {}
 	end
 	
-	local function processUpdateQueue()
-		local currentTime = tick()
-		if currentTime - lastUpdate < PerformanceConfig.UpdateInterval then return end
-		lastUpdate = currentTime
-		
-		local processed = 0
-		while #updateQueue > 0 and processed < PerformanceConfig.BatchSize do
-			local character = table.remove(updateQueue, 1)
-			if character and character.Parent then
-				applyHighlight(character)
+	local function cleanupConnections()
+		for _, connection in pairs(connections) do
+			if connection then
+				connection:Disconnect()
 			end
-			processed = processed + 1
 		end
-	end
-	
-	local function queueHighlight(character)
-		if character and not character:FindFirstChild("ESP_Highlight") then
-			table.insert(updateQueue, character)
-		end
+		connections = {}
 	end
 	
 	local function toggleESP(state)
 		if state then
-			removeHighlights()
+			cleanupConnections()
 			
 			for _, player in pairs(Players:GetPlayers()) do
 				if player ~= localPlayer then
 					if player.Character then 
-						queueHighlight(player.Character) 
+						applyHighlight(player.Character) 
 					end
 					
-					ConnectionManager:Add(player.CharacterAdded:Connect(function(char)
+					local connection = player.CharacterAdded:Connect(function(char)
 						if isEnabled then 
-							task.wait(PerformanceConfig.LoadDelay)
-							queueHighlight(char) 
+							task.wait(0.1)
+							applyHighlight(char) 
 						end
-					end))
+					end)
+					table.insert(connections, connection)
 				end
 			end
 			
-			ConnectionManager:Add(Players.PlayerAdded:Connect(function(player)
+			local playerAddedConnection = Players.PlayerAdded:Connect(function(player)
 				if isEnabled then
-					ConnectionManager:Add(player.CharacterAdded:Connect(function(char)
+					local connection = player.CharacterAdded:Connect(function(char)
 						if isEnabled then 
-							task.wait(PerformanceConfig.LoadDelay)
-							queueHighlight(char) 
+							task.wait(0.1)
+							applyHighlight(char) 
 						end
-					end))
+					end)
+					table.insert(connections, connection)
 				end
-			end))
+			end)
+			table.insert(connections, playerAddedConnection)
 			
-			ConnectionManager:Add(Players.PlayerRemoving:Connect(function(player)
+			local playerRemovingConnection = Players.PlayerRemoving:Connect(function(player)
 				if player.Character then
 					local highlight = player.Character:FindFirstChild("ESP_Highlight")
 					if highlight then 
@@ -2040,12 +1698,11 @@ local script = G2L["1d"];
 						highlights[player.Character] = nil
 					end
 				end
-			end))
-			
-			ConnectionManager:Add(RunService.Heartbeat:Connect(processUpdateQueue))
+			end)
+			table.insert(connections, playerRemovingConnection)
 		else
 			removeHighlights()
-			updateQueue = {}
+			cleanupConnections()
 		end
 	end
 	
@@ -2058,7 +1715,7 @@ local script = G2L["1d"];
 	script.AncestryChanged:Connect(function(_, parent)
 		if not parent then
 			removeHighlights()
-			updateQueue = {}
+			cleanupConnections()
 		end
 	end)
 end;
@@ -2069,11 +1726,12 @@ local script = G2L["24"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
-	local localPlayer = Players.LocalPlayer
+	local tweenService = game:GetService("TweenService")
+	local Players = game:GetService("Players")
 	
 	local ESP_NAME_SETTINGS = {
 		Font = Enum.Font.GothamBold,
-		Color = Settings.ESPColor,
+		Color = Color3.fromRGB(255, 255, 255),
 		Size = 18,
 		StrokeColor = Color3.fromRGB(0, 0, 0),
 		StrokeThickness = 2,
@@ -2093,8 +1751,7 @@ local script = G2L["24"];
 	}
 	
 	local espInstances = {}
-	local updateQueue = {}
-	local lastUpdate = 0
+	local connections = {}
 	
 	local function createEspName(player)
 		local character = player.Character
@@ -2133,6 +1790,15 @@ local script = G2L["24"];
 		return espText
 	end
 	
+	local function cleanupConnections()
+		for _, connection in pairs(connections) do
+			if connection then
+				connection:Disconnect()
+			end
+		end
+		connections = {}
+	end
+	
 	local function removeAllESP()
 		for _, esp in pairs(espInstances) do
 			if esp and esp.Parent then
@@ -2142,37 +1808,16 @@ local script = G2L["24"];
 		espInstances = {}
 	end
 	
-	local function processUpdateQueue()
-		local currentTime = tick()
-		if currentTime - lastUpdate < PerformanceConfig.UpdateInterval then return end
-		lastUpdate = currentTime
-		
-		local processed = 0
-		while #updateQueue > 0 and processed < PerformanceConfig.BatchSize do
-			local player = table.remove(updateQueue, 1)
-			if player and player.Parent then
-				createEspName(player)
-			end
-			processed = processed + 1
-		end
-	end
-	
-	local function queueEspName(player)
-		if player and player.Parent and not espInstances[player.Name] then
-			table.insert(updateQueue, player)
-		end
-	end
-	
 	local function animateToggle(state)
 		local target = state and toggleAnim.On or toggleAnim.Off
 
-		local thumbTween = TweenService:Create(
+		local thumbTween = tweenService:Create(
 			sliderThumb,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{Position = target.Position}
 		)
 
-		local buttonTween = TweenService:Create(
+		local buttonTween = tweenService:Create(
 			button,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{BackgroundColor3 = target.Color}
@@ -2184,45 +1829,47 @@ local script = G2L["24"];
 	
 	local function toggleEsp(state)
 		if state then
-			removeAllESP()
+			cleanupConnections()
 
 			for _, player in ipairs(Players:GetPlayers()) do
-				if player ~= localPlayer then
+				if player ~= Players.LocalPlayer then
 					if player.Character then
-						queueEspName(player)
+						createEspName(player)
 					end
 					
-					ConnectionManager:Add(player.CharacterAdded:Connect(function(character)
+					local connection = player.CharacterAdded:Connect(function(character)
 						if isEnabled then
-							task.wait(PerformanceConfig.LoadDelay)
-							queueEspName(player)
+							task.wait(0.1)
+							createEspName(player)
 						end
-					end))
+					end)
+					table.insert(connections, connection)
 				end
 			end
 			
-			ConnectionManager:Add(Players.PlayerAdded:Connect(function(player)
+			local playerAddedConnection = Players.PlayerAdded:Connect(function(player)
 				if isEnabled then
-					ConnectionManager:Add(player.CharacterAdded:Connect(function(character)
+					local connection = player.CharacterAdded:Connect(function(character)
 						if isEnabled then
-							task.wait(PerformanceConfig.LoadDelay)
-							queueEspName(player)
+							task.wait(0.1)
+							createEspName(player)
 						end
-					end))
+					end)
+					table.insert(connections, connection)
 				end
-			end))
+			end)
+			table.insert(connections, playerAddedConnection)
 			
-			ConnectionManager:Add(Players.PlayerRemoving:Connect(function(player)
+			local playerRemovingConnection = Players.PlayerRemoving:Connect(function(player)
 				if espInstances[player.Name] then
 					espInstances[player.Name]:Destroy()
 					espInstances[player.Name] = nil
 				end
-			end))
-			
-			ConnectionManager:Add(RunService.Heartbeat:Connect(processUpdateQueue))
+			end)
+			table.insert(connections, playerRemovingConnection)
 		else
 			removeAllESP()
-			updateQueue = {}
+			cleanupConnections()
 		end
 	end
 	
@@ -2235,7 +1882,7 @@ local script = G2L["24"];
 	script.AncestryChanged:Connect(function(_, parent)
 		if not parent then
 			removeAllESP()
-			updateQueue = {}
+			cleanupConnections()
 		end
 	end)
 	
@@ -2335,63 +1982,35 @@ local script = G2L["2b"];
 		if self.state.instances[plot.Name] then return self.state.instances[plot.Name] end
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "ESP_"..plot.Name
-		billboard.Size = UDim2.new(0, 120, 0, 36)
-		billboard.StudsOffset = Vector3.new(0, 4, 0)
+		billboard.Size = self.settings.baseSize
+		billboard.StudsOffset = self.settings.offset
 		billboard.AlwaysOnTop = true
 		billboard.Adornee = mainPart
 		billboard.MaxDistance = self.settings.maxDistance
 		billboard.Parent = mainPart
-
+	
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(1, 0, 1, 0)
-		frame.BackgroundTransparency = 0.35
-		frame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+		frame.BackgroundTransparency = 0.85
+		frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 		frame.BorderSizePixel = 0
-		frame.Parent = billboard
-
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 6)
-		corner.Parent = frame
-
+	
 		local label = Instance.new("TextLabel")
 		label.Name = "Label"
-		label.Size = UDim2.new(1, -8, 0, 16)
-		label.Position = UDim2.new(0, 4, 0, 2)
+		label.Size = UDim2.new(1, -8, 1, -8)
+		label.Position = UDim2.new(0, 4, 0, 4)
 		label.BackgroundTransparency = 1
 		label.TextScaled = false
-		label.TextSize = 13
-		label.Font = Enum.Font.GothamBold
-		label.TextStrokeTransparency = 0.3
+		label.TextSize = 12
+		label.Font = Enum.Font.GothamMedium
+		label.TextStrokeTransparency = 0.4
 		label.TextStrokeColor3 = Color3.new(0, 0, 0)
-		label.TextColor3 = Color3.fromRGB(0, 200, 255)
 		label.Parent = frame
-
-		local timeLabel = Instance.new("TextLabel")
-		timeLabel.Name = "TimeLabel"
-		timeLabel.Size = UDim2.new(1, -8, 0, 12)
-		timeLabel.Position = UDim2.new(0, 4, 0, 18)
-		timeLabel.BackgroundTransparency = 1
-		timeLabel.TextScaled = false
-		timeLabel.TextSize = 11
-		timeLabel.Font = Enum.Font.GothamMedium
-		timeLabel.TextStrokeTransparency = 0.5
-		timeLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-		timeLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
-		timeLabel.Parent = frame
-
-		local ownerStatus = Instance.new("TextLabel")
-		ownerStatus.Name = "OwnerStatus"
-		ownerStatus.Size = UDim2.new(1, -8, 0, 10)
-		ownerStatus.Position = UDim2.new(0, 4, 0, 30)
-		ownerStatus.BackgroundTransparency = 1
-		ownerStatus.TextScaled = false
-		ownerStatus.TextSize = 9
-		ownerStatus.Font = Enum.Font.Gotham
-		ownerStatus.TextStrokeTransparency = 0.7
-		ownerStatus.TextStrokeColor3 = Color3.new(0, 0, 0)
-		ownerStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
-		ownerStatus.Parent = frame
-
+	
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 5)
+		corner.Parent = frame
+		frame.Parent = billboard
 		self.state.instances[plot.Name] = billboard
 		return billboard
 	end
@@ -2426,73 +2045,43 @@ local script = G2L["2b"];
 	
 		for _, plot in plotsFolder:GetChildren() do
 			local mainPart = plot:FindFirstChild("Main", true) or plot:FindFirstChild("BasePart", true)
-			local timeLabelObj = plot:FindFirstChild("RemainingTime", true)
+			local timeLabel = plot:FindFirstChild("RemainingTime", true)
 			local ownerValue = plot:FindFirstChild("Owner", true)
+	
 			if mainPart then
 				local ownershipStatus = self:UpdateOwnership(plot)
 				local isMyPlot = plot.Name == self.state.myPlot
-				local billboard = self:CreateESP(plot, mainPart)
-				local label = billboard.Frame.Label
-				local timeLabel = billboard.Frame.TimeLabel
-				local ownerStatus = billboard.Frame.OwnerStatus
+	
 				if isMyPlot then
-					label.Text = "MY BASE"
-					label.TextColor3 = self.settings.colors.myPlot
+					local billboard = self:CreateESP(plot, mainPart)
+					billboard.Frame.Label.Text = "MY BASE"
+					billboard.Frame.Label.TextColor3 = self.settings.colors.myPlot
 				elseif ownershipStatus == "NEW OWNER" then
-					label.Text = "CLAIMED"
-					label.TextColor3 = self.settings.colors.newOwner
+					local billboard = self:CreateESP(plot, mainPart)
+					billboard.Frame.Label.Text = "CLAIMED"
+					billboard.Frame.Label.TextColor3 = self.settings.colors.newOwner
 				elseif ownerValue and (ownerValue.Value == nil or ownerValue.Value == "") then
-					label.Text = "UNCLAIMED"
-					label.TextColor3 = self.settings.colors.noOwner
-				else
-					label.Text = "BASE"
-					label.TextColor3 = Color3.fromRGB(255,255,255)
+					local billboard = self:CreateESP(plot, mainPart)
+					billboard.Frame.Label.Text = "UNCLAIMED"
+					billboard.Frame.Label.TextColor3 = self.settings.colors.noOwner
+				elseif timeLabel then
+					local billboard = self:CreateESP(plot, mainPart)
+					local isUnlocked = (timeLabel.Text == "0s" or timeLabel.Text == "")
+					billboard.Frame.Label.Text = isUnlocked and "UNLOCKED" or ("LOCKED: "..timeLabel.Text)
+					billboard.Frame.Label.TextColor3 = isUnlocked and self.settings.colors.unlocked or self.settings.colors.locked
 				end
-				if timeLabelObj then
-					local t = tostring(timeLabelObj.Text)
-					local sec = tonumber(t:match("(%d+)") or "0")
-					if t == "" or t == "0s" or sec == 0 then
-						timeLabel.Text = "UNLOCKED"
-						timeLabel.TextColor3 = self.settings.colors.unlocked
-					else
-						timeLabel.Text = "LOCKED: " .. t
-						timeLabel.TextColor3 = self.settings.colors.locked
+	
+				local camera = workspace.CurrentCamera
+				if camera then
+					local distance = (camera.CFrame.Position - mainPart.Position).Magnitude
+					local scale = math.clamp(1.3 - (distance/self.settings.maxDistance), 0.7, 1.2)
+					if self.state.instances[plot.Name] then
+						self.state.instances[plot.Name].Size = UDim2.new(
+							0, self.settings.baseSize.X.Offset * scale, 
+							0, self.settings.baseSize.Y.Offset * scale
+						)
 					end
-				else
-					timeLabel.Text = "NO TIMER"
-					timeLabel.TextColor3 = Color3.fromRGB(200,200,200)
 				end
-				local ownerInBase = false
-				if ownerValue and ownerValue.Value and ownerValue.Value ~= "" then
-					local ownerName = tostring(ownerValue.Value)
-					for _, p in pairs(Players:GetPlayers()) do
-						if p.Name == ownerName or p.DisplayName == ownerName then
-							local char = p.Character
-							if char then
-								local root = char:FindFirstChild("HumanoidRootPart")
-								if root and mainPart then
-									local dist = (root.Position - mainPart.Position).Magnitude
-									if dist <= Settings.BaseNotificationRange then
-										ownerInBase = true
-										break
-									end
-								end
-							end
-						end
-					end
-					if ownerInBase then
-						ownerStatus.Text = "OWNER IN BASE"
-						ownerStatus.TextColor3 = Color3.fromRGB(100,255,100)
-					else
-						ownerStatus.Text = "OWNER NOT IN BASE"
-						ownerStatus.TextColor3 = Color3.fromRGB(255,100,100)
-					end
-				else
-					ownerStatus.Text = "NO OWNER"
-					ownerStatus.TextColor3 = Color3.fromRGB(200,200,200)
-				end
-				-- always same size, no scaling
-				billboard.Size = UDim2.new(0, 120, 0, 36)
 			elseif self.state.instances[plot.Name] then
 				self.state.instances[plot.Name]:Destroy()
 				self.state.instances[plot.Name] = nil
@@ -2637,7 +2226,9 @@ local script = G2L["3b"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
-	local localPlayer = Players.LocalPlayer
+	local tweenService = game:GetService("TweenService")
+	local RunService = game:GetService("RunService")
+	local UserInputService = game:GetService("UserInputService")
 	
 	local toggleAnim = {
 		On = {
@@ -2650,6 +2241,7 @@ local script = G2L["3b"];
 		}
 	}
 	
+	local player = game:GetService("Players").LocalPlayer
 	local JUMP_FORCE = 50
 	local COOLDOWN = 0.5
 	local JUMP_DURATION = 0.2
@@ -2659,12 +2251,12 @@ local script = G2L["3b"];
 	
 	local function animateToggle(state)
 		local target = state and toggleAnim.On or toggleAnim.Off
-		local thumbTween = TweenService:Create(
+		local thumbTween = tweenService:Create(
 			sliderThumb,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{Position = target.Position}
 		)
-		local buttonTween = TweenService:Create(
+		local buttonTween = tweenService:Create(
 			button,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{BackgroundColor3 = target.Color}
@@ -2678,7 +2270,7 @@ local script = G2L["3b"];
 		local now = os.clock()
 		if now - lastJumpTime < COOLDOWN or isJumping then return end
 
-		local character = localPlayer.Character
+		local character = player.Character
 		if not character then return end
 
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
@@ -2689,7 +2281,7 @@ local script = G2L["3b"];
 		lastJumpTime = now
 
 		if rootPart:CanSetNetworkOwnership() then
-			rootPart:SetNetworkOwner(localPlayer)
+			rootPart:SetNetworkOwner(player)
 		end
 
 		local bodyVelocity = Instance.new("BodyVelocity")
@@ -2749,7 +2341,9 @@ local script = G2L["42"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
-	local localPlayer = Players.LocalPlayer
+	local tweenService = game:GetService("TweenService")
+	local RunService = game:GetService("RunService")
+	local Players = game:GetService("Players")
 	
 	local toggleAnim = {
 		On = {
@@ -2767,18 +2361,18 @@ local script = G2L["42"];
 	local speedConnection = nil
 	local defaultSpeed = 24
 	local boostSpeed = 50
-	local lastUpdate = 0
+	local localPlayer = Players.LocalPlayer
 	
 	local function animateToggle(state)
 		local target = state and toggleAnim.On or toggleAnim.Off
 
-		TweenService:Create(
+		tweenService:Create(
 			sliderThumb,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{Position = target.Position}
 		):Play()
 
-		TweenService:Create(
+		tweenService:Create(
 			button,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{BackgroundColor3 = target.Color}
@@ -2793,10 +2387,6 @@ local script = G2L["42"];
 		
 		if state then
 			speedConnection = RunService.Heartbeat:Connect(function()
-				local currentTime = tick()
-				if currentTime - lastUpdate < PerformanceConfig.UpdateInterval then return end
-				lastUpdate = currentTime
-				
 				local character = localPlayer.Character
 				if not character then return end
 				
@@ -2924,7 +2514,9 @@ local script = G2L["4f"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
-	local localPlayer = Players.LocalPlayer
+	local tweenService = game:GetService("TweenService")
+	local RunService = game:GetService("RunService")
+	local Players = game:GetService("Players")
 	
 	local toggleAnim = {
 		On = {
@@ -2937,11 +2529,11 @@ local script = G2L["4f"];
 		}
 	}
 	
+	local localPlayer = Players.LocalPlayer
 	local antiStunConnections = {}
 	local defaultWalkSpeed = 16
 	local defaultJumpPower = 50
 	local lastStunTime = 0
-	local lastUpdate = 0
 	
 	local STUNNED_STATES = {
 		[Enum.HumanoidStateType.Physics] = true,
@@ -2954,13 +2546,13 @@ local script = G2L["4f"];
 	local function animateToggle(state)
 		local target = state and toggleAnim.On or toggleAnim.Off
 
-		TweenService:Create(
+		tweenService:Create(
 			sliderThumb,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{Position = target.Position}
 		):Play()
 
-		TweenService:Create(
+		tweenService:Create(
 			button,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{BackgroundColor3 = target.Color}
@@ -2999,13 +2591,10 @@ local script = G2L["4f"];
 		defaultWalkSpeed = humanoid.WalkSpeed
 		defaultJumpPower = humanoid.JumpPower
 
-		ConnectionManager:Add(RunService.Heartbeat:Connect(function()
+		table.insert(antiStunConnections, RunService.Heartbeat:Connect(function()
 			if not isEnabled then return end
 
-			local currentTime = tick()
-			if currentTime - lastUpdate < PerformanceConfig.UpdateInterval then return end
-			lastUpdate = currentTime
-
+			local currentTime = os.clock()
 			if currentTime - lastStunTime < 0.1 then return end
 
 			if STUNNED_STATES[humanoid:GetState()] then
@@ -3022,8 +2611,8 @@ local script = G2L["4f"];
 			end
 		end))
 
-		ConnectionManager:Add(localPlayer.CharacterAdded:Connect(function(newChar)
-			task.wait(PerformanceConfig.LoadDelay)
+		table.insert(antiStunConnections, localPlayer.CharacterAdded:Connect(function(newChar)
+			task.wait(0.5)
 			if isEnabled then
 				setupAntiStun()
 			end
@@ -3064,8 +2653,11 @@ local script = G2L["56"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
-	local localPlayer = Players.LocalPlayer
+	local tweenService = game:GetService("TweenService")
+	local players = game:GetService("Players")
+	local RunService = game:GetService("RunService")
 	local VirtualUser = game:GetService("VirtualUser")
+	local localPlayer = players.LocalPlayer
 	
 	local antiAfkConnection = nil
 	local idledConnection = nil
@@ -3086,13 +2678,13 @@ local script = G2L["56"];
 	local function animateToggle(state)
 		local target = state and toggleAnim.On or toggleAnim.Off
 
-		local thumbTween = TweenService:Create(
+		local thumbTween = tweenService:Create(
 			sliderThumb,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{Position = target.Position}
 		)
 
-		local buttonTween = TweenService:Create(
+		local buttonTween = tweenService:Create(
 			button,
 			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 			{BackgroundColor3 = target.Color}
@@ -3126,27 +2718,27 @@ local script = G2L["56"];
 			local humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then return end
 
-			ConnectionManager:Add(RunService.Heartbeat:Connect(function()
+			antiAfkConnection = RunService.Heartbeat:Connect(function()
 				local currentTime = tick()
 				if currentTime - lastMoveTime > 25 then
 					humanoid:Move(Vector3.new(math.random(-1,1), 0, math.random(-1,1)))
 					lastMoveTime = currentTime
 				end
-			end))
+			end)
 
-			ConnectionManager:Add(localPlayer.Idled:Connect(function()
+			idledConnection = localPlayer.Idled:Connect(function()
 				VirtualUser:CaptureController()
 				VirtualUser:ClickButton2(Vector2.new())
-			end))
+			end)
 		end
 
 		applyAntiAfk()
 
-		ConnectionManager:Add(localPlayer.CharacterAdded:Connect(function()
-			task.wait(PerformanceConfig.LoadDelay)
+		characterAddedConnection = localPlayer.CharacterAdded:Connect(function()
+			task.wait(0.1)
 			disconnectAntiAfk()
 			applyAntiAfk()
-		end))
+		end)
 	end
 	
 	button.MouseButton1Click:Connect(function()
@@ -3190,7 +2782,9 @@ local script = G2L["5d"];
 	local button = script.Parent
 	local sliderThumb = button:FindFirstChild("Frame")
 	local isEnabled = false
-	local localPlayer = Players.LocalPlayer
+	local tweenService = game:GetService("TweenService")
+	local players = game:GetService("Players")
+	local localPlayer = players.LocalPlayer
 	local antiAfkConnection = nil
 	
 	local toggleAnim = {
@@ -4940,161 +4534,5 @@ local function C_da()
 
 end;
 task.spawn(C_da);
-
--- Settings Scripts
-local function Settings_BaseNotification()
-    local script = G2L["settings_btn1_script"];
-    local button = script.Parent
-    local sliderThumb = button:FindFirstChild("Frame")
-    local isEnabled = Settings.BaseNotificationEnabled
-    
-    local toggleAnim = {
-        On = {
-            Position = UDim2.new(0, 25, 0, 2),
-            Color = Color3.fromRGB(0, 170, 255)
-        },
-        Off = {
-            Position = UDim2.new(0, 4, 0, 2),
-            Color = Color3.fromRGB(70, 70, 80)
-        }
-    }
-    
-    local function animateToggle(state)
-        local target = state and toggleAnim.On or toggleAnim.Off
-        local thumbTween = TweenService:Create(sliderThumb, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = target.Position})
-        local buttonTween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = target.Color})
-        thumbTween:Play()
-        buttonTween:Play()
-    end
-    
-    button.MouseButton1Click:Connect(function()
-        isEnabled = not isEnabled
-        Settings.BaseNotificationEnabled = isEnabled
-        animateToggle(isEnabled)
-        
-        if isEnabled then
-            BaseNotificationSystem:Initialize()
-        else
-            BaseNotificationSystem.enabled = false
-        end
-    end)
-    
-    animateToggle(isEnabled)
-end;
-
-local function Settings_ESPColor()
-    local script = G2L["settings_btn2_script"];
-    local button = script.Parent
-    
-    local colors = {
-        Color3.fromRGB(0, 170, 255),
-        Color3.fromRGB(255, 100, 100),
-        Color3.fromRGB(100, 255, 100),
-        Color3.fromRGB(255, 255, 100),
-        Color3.fromRGB(255, 100, 255),
-        Color3.fromRGB(100, 255, 255)
-    }
-    
-    local currentColorIndex = 1
-    
-    button.MouseButton1Click:Connect(function()
-        currentColorIndex = currentColorIndex + 1
-        if currentColorIndex > #colors then
-            currentColorIndex = 1
-        end
-        
-        Settings.ESPColor = colors[currentColorIndex]
-        button.BackgroundColor3 = colors[currentColorIndex]
-    end)
-    
-    button.BackgroundColor3 = Settings.ESPColor
-end;
-
--- Enhanced Tab System
-local function EnhancedTabSystem()
-    local mainBtn = G2L["d"]
-    local visualBtn = G2L["f"]
-    local miscBtn = G2L["11"]
-    local settingsBtn = G2L["settingsbtn"]
-    
-    local mainContent = G2L["33"]
-    local visualContent = G2L["15"]
-    local miscContent = G2L["60"]
-    local settingsContent = G2L["settings"]
-    
-    local function showTab(content)
-        mainContent.Visible = false
-        visualContent.Visible = false
-        miscContent.Visible = false
-        settingsContent.Visible = false
-        content.Visible = true
-    end
-    
-    local function updateTabButtons(activeBtn)
-        local buttons = {mainBtn, visualBtn, miscBtn, settingsBtn}
-        local activeColor = Color3.fromRGB(0, 170, 255)
-        local inactiveColor = Color3.fromRGB(35, 35, 45)
-        local activeTextColor = Color3.fromRGB(255, 255, 255)
-        local inactiveTextColor = Color3.fromRGB(200, 200, 200)
-        
-        for _, btn in pairs(buttons) do
-            if btn == activeBtn then
-                btn.BackgroundColor3 = activeColor
-                btn.TextColor3 = activeTextColor
-            else
-                btn.BackgroundColor3 = inactiveColor
-                btn.TextColor3 = inactiveTextColor
-            end
-        end
-    end
-    
-    mainBtn.MouseButton1Click:Connect(function()
-        showTab(mainContent)
-        updateTabButtons(mainBtn)
-    end)
-    
-    visualBtn.MouseButton1Click:Connect(function()
-        showTab(visualContent)
-        updateTabButtons(visualBtn)
-    end)
-    
-    miscBtn.MouseButton1Click:Connect(function()
-        showTab(miscContent)
-        updateTabButtons(miscBtn)
-    end)
-    
-    settingsBtn.MouseButton1Click:Connect(function()
-        showTab(settingsContent)
-        updateTabButtons(settingsBtn)
-    end)
-    
-    showTab(mainContent)
-    updateTabButtons(mainBtn)
-end;
-
-local function initializeScript()
-    task.wait(PerformanceConfig.LoadDelay)
-    
-    local mainGui = G2L["1"]
-    if mainGui then
-        mainGui.Parent = PlayerGui
-    end
-    
-    ConnectionManager:Add(RunService.Heartbeat:Connect(function()
-        if #ConnectionManager.connections > PerformanceConfig.MaxConnections then
-            ConnectionManager:Cleanup()
-        end
-    end))
-    
-    task.spawn(Settings_BaseNotification)
-    task.spawn(Settings_ESPColor)
-    task.spawn(EnhancedTabSystem)
-    
-    if Settings.BaseNotificationEnabled then
-        BaseNotificationSystem:Initialize()
-    end
-end
-
-task.spawn(initializeScript)
 
 return G2L["1"], require;
