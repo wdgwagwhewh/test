@@ -85,28 +85,6 @@ G2L["a"] = Instance.new("LocalScript", G2L["8"]);
 
 
 
--- StarterGui.Lurk.Frame.top.Discord
-G2L["discord"] = Instance.new("TextButton", G2L["5"]);
-G2L["discord"]["TextSize"] = 16;
-G2L["discord"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["discord"]["BackgroundColor3"] = Color3.fromRGB(114, 137, 218);
-G2L["discord"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["discord"]["Size"] = UDim2.new(0, 32, 0, 32);
-G2L["discord"]["Text"] = [[D]];
-G2L["discord"]["Name"] = [[Discord]];
-G2L["discord"]["Position"] = UDim2.new(1, -75, 0, 4);
-
-
--- StarterGui.Lurk.Frame.top.Discord.UICorner
-G2L["discord_corner"] = Instance.new("UICorner", G2L["discord"]);
-G2L["discord_corner"]["CornerRadius"] = UDim.new(0, 8);
-
-
--- StarterGui.Lurk.Frame.top.Discord.LocalScript
-G2L["discord_script"] = Instance.new("LocalScript", G2L["discord"]);
-
-
-
 -- StarterGui.Lurk.Frame.tabs
 G2L["b"] = Instance.new("Frame", G2L["2"]);
 G2L["b"]["Size"] = UDim2.new(1, -20, 0, 35);
@@ -4577,32 +4555,6 @@ local function C_da()
 
 end;
 task.spawn(C_da);
-
--- StarterGui.Lurk.Frame.top.Discord.LocalScript
-local function C_discord()
-	local script = G2L["discord_script"];
-	local button = script.Parent
-	
-	button.MouseButton1Click:Connect(function()
-		local success, result = pcall(function()
-			game:GetService("StarterGui"):SetCore("SendNotification", {
-				Title = "Discord",
-				Text = "Opening Discord invite...",
-				Duration = 2
-			})
-		end)
-		
-		if success then
-			setclipboard("https://discord.gg/293k8FSeUJOP")
-			game:GetService("StarterGui"):SetCore("SendNotification", {
-				Title = "Discord",
-				Text = "Discord invite copied to clipboard!",
-				Duration = 3
-			})
-		end
-	end)
-end;
-task.spawn(C_discord);
 
 -- StarterGui.Lurk.Frame.ScrollingFrame.main.DiscordButton.LocalScript
 local function C_main_discord()
